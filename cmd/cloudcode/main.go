@@ -2,7 +2,7 @@ package main
 
 import (
 	"context"
-	"log"
+	"log/slog"
 	"net/http"
 	"os"
 	"os/signal"
@@ -22,27 +22,38 @@ import (
 
 func main() {
 	cfg := config.Load()
-	logger := log.New(os.Stdout, "", log.LstdFlags)
+
+	// Structured logger: JSON in production, text in development
+	var handler slog.Handler
+	if cfg.Environment == "production" {
+		handler = slog.NewJSONHandler(os.Stdout, nil)
+	} else {
+		handler = slog.NewTextHandler(os.Stdout, nil)
+	}
+	logger := slog.New(handler)
 
 	// Database
 	db, err := ent.Open("postgres", cfg.DatabaseURL)
 	if err != nil {
-		logger.Fatalf("failed to connect to database: %v", err)
+		logger.Error("failed to connect to database", "error", err)
+		os.Exit(1)
 	}
 	defer db.Close()
 
 	// Run auto-migration
 	if err := db.Schema.Create(context.Background(), migrate.WithDropIndex(true), migrate.WithDropColumn(true)); err != nil {
-		logger.Fatalf("failed to run migrations: %v", err)
+		logger.Error("failed to run migrations", "error", err)
+		os.Exit(1)
 	}
-	logger.Println("database migrations applied")
+	logger.Info("database migrations applied")
 
 	// Provider
 	prov, err := factory.NewProvisioner(cfg)
 	if err != nil {
-		logger.Fatalf("failed to create provisioner: %v", err)
+		logger.Error("failed to create provisioner", "error", err)
+		os.Exit(1)
 	}
-	logger.Printf("provider: %s", cfg.Provider)
+	logger.Info("provider initialized", "provider", cfg.Provider)
 
 	// Service layer
 	instanceSvc := service.NewInstanceService(db, prov, cfg.AnthropicAPIKey)
@@ -53,7 +64,7 @@ func main() {
 		nbClient := netbird.New(cfg.NetbirdAPIURL, cfg.NetbirdAPIToken)
 		nbSvc := service.NewNetbirdService(nbClient, logger)
 		instanceSvc.SetNetbirdService(nbSvc)
-		logger.Println("netbird: enabled")
+		logger.Info("netbird enabled")
 
 		// Cron for expired key cleanup
 		cronInterval := 30 * time.Minute
@@ -65,10 +76,10 @@ func main() {
 	var mailer service.Mailer
 	if cfg.SMTPHost != "" {
 		mailer = service.NewSMTPMailer(cfg.SMTPHost, cfg.SMTPPort, cfg.SMTPUsername, cfg.SMTPPassword, cfg.SMTPFrom)
-		logger.Println("mailer: smtp")
+		logger.Info("mailer initialized", "type", "smtp")
 	} else {
 		mailer = service.NewLogMailer(logger)
-		logger.Println("mailer: log (dev mode)")
+		logger.Info("mailer initialized", "type", "log")
 	}
 
 	// Auth service
@@ -83,9 +94,9 @@ func main() {
 			cfg.StripePriceStarter, cfg.StripePricePro,
 			cfg.FrontendURL, logger,
 		)
-		logger.Println("billing: stripe enabled")
+		logger.Info("billing enabled", "provider", "stripe")
 	} else {
-		logger.Println("billing: disabled (no STRIPE_SECRET_KEY)")
+		logger.Info("billing disabled", "reason", "no STRIPE_SECRET_KEY")
 	}
 
 	// Activity service
@@ -118,7 +129,7 @@ func main() {
 		Addr:         cfg.ListenAddr,
 		Handler:      router,
 		ReadTimeout:  15 * time.Second,
-		WriteTimeout: 15 * time.Second,
+		WriteTimeout: 120 * time.Second,
 		IdleTimeout:  60 * time.Second,
 	}
 
@@ -127,14 +138,15 @@ func main() {
 	signal.Notify(done, os.Interrupt, syscall.SIGTERM)
 
 	go func() {
-		logger.Printf("listening on %s", cfg.ListenAddr)
+		logger.Info("server starting", "addr", cfg.ListenAddr)
 		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-			logger.Fatalf("server error: %v", err)
+			logger.Error("server error", "error", err)
+			os.Exit(1)
 		}
 	}()
 
 	<-done
-	logger.Println("shutting down...")
+	logger.Info("shutting down")
 
 	actSvc.Stop()
 	if cronSvc != nil {
@@ -144,7 +156,8 @@ func main() {
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
 	if err := srv.Shutdown(ctx); err != nil {
-		logger.Fatalf("shutdown error: %v", err)
+		logger.Error("shutdown error", "error", err)
+		os.Exit(1)
 	}
-	logger.Println("server stopped")
+	logger.Info("server stopped")
 }

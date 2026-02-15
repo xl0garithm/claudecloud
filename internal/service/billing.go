@@ -4,7 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"log"
+	"log/slog"
 
 	"github.com/stripe/stripe-go/v82"
 	portalsession "github.com/stripe/stripe-go/v82/billingportal/session"
@@ -24,7 +24,7 @@ type BillingService struct {
 	priceStarter  string
 	pricePro      string
 	frontendURL   string
-	logger        *log.Logger
+	logger        *slog.Logger
 }
 
 // NewBillingService creates a new BillingService and sets the Stripe API key.
@@ -36,7 +36,7 @@ func NewBillingService(
 	priceStarter string,
 	pricePro string,
 	frontendURL string,
-	logger *log.Logger,
+	logger *slog.Logger,
 ) *BillingService {
 	stripe.Key = stripeKey
 	return &BillingService{
@@ -175,7 +175,7 @@ func (s *BillingService) processEvent(event stripe.Event) error {
 	case "invoice.payment_failed":
 		return s.handlePaymentFailed(ctx, event)
 	default:
-		s.logger.Printf("billing: unhandled event type %s", event.Type)
+		s.logger.Info("unhandled billing event", "event_type", event.Type)
 		return nil
 	}
 }
@@ -223,10 +223,10 @@ func (s *BillingService) handleCheckoutCompleted(ctx context.Context, event stri
 
 	// Auto-provision instance
 	if _, provErr := s.instanceSvc.Create(ctx, userID); provErr != nil {
-		s.logger.Printf("billing: auto-provision for user %d: %v", userID, provErr)
+		s.logger.Error("auto-provision failed after checkout", "user_id", userID, "error", provErr)
 	}
 
-	s.logger.Printf("billing: checkout completed for user %d, plan=%s", userID, plan)
+	s.logger.Info("checkout completed", "user_id", userID, "plan", plan)
 	return nil
 }
 
@@ -255,7 +255,7 @@ func (s *BillingService) handleSubscriptionUpdated(ctx context.Context, event st
 		return fmt.Errorf("update subscription status: %w", err)
 	}
 
-	s.logger.Printf("billing: subscription updated for user %d, status=%s", u.ID, sub.Status)
+	s.logger.Info("subscription updated", "user_id", u.ID, "status", sub.Status)
 	return nil
 }
 
@@ -288,11 +288,11 @@ func (s *BillingService) handleSubscriptionDeleted(ctx context.Context, event st
 	inst, err := s.instanceSvc.GetByUserID(ctx, u.ID)
 	if err == nil && inst.Status == "running" {
 		if pauseErr := s.instanceSvc.Pause(ctx, inst.ID); pauseErr != nil {
-			s.logger.Printf("billing: pause instance for user %d: %v", u.ID, pauseErr)
+			s.logger.Error("failed to pause instance on subscription delete", "user_id", u.ID, "error", pauseErr)
 		}
 	}
 
-	s.logger.Printf("billing: subscription deleted for user %d", u.ID)
+	s.logger.Info("subscription deleted", "user_id", u.ID)
 	return nil
 }
 
@@ -320,7 +320,7 @@ func (s *BillingService) handlePaymentFailed(ctx context.Context, event stripe.E
 		return fmt.Errorf("update subscription status: %w", err)
 	}
 
-	s.logger.Printf("billing: payment failed for user %d", u.ID)
+	s.logger.Warn("payment failed", "user_id", u.ID)
 	return nil
 }
 

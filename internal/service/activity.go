@@ -2,7 +2,7 @@ package service
 
 import (
 	"context"
-	"log"
+	"log/slog"
 	"time"
 
 	"github.com/logan/cloudcode/internal/ent"
@@ -14,7 +14,7 @@ import (
 type ActivityService struct {
 	db            *ent.Client
 	provider      provider.Provisioner
-	logger        *log.Logger
+	logger        *slog.Logger
 	interval      time.Duration
 	idleThreshold time.Duration
 	stopCh        chan struct{}
@@ -30,7 +30,7 @@ func (a *ActivityService) SetOnActive(fn func(ctx context.Context, inst *ent.Ins
 func NewActivityService(
 	db *ent.Client,
 	prov provider.Provisioner,
-	logger *log.Logger,
+	logger *slog.Logger,
 	interval time.Duration,
 	idleThreshold time.Duration,
 ) *ActivityService {
@@ -47,13 +47,13 @@ func NewActivityService(
 // Start begins the activity polling loop in a goroutine.
 func (a *ActivityService) Start() {
 	go a.run()
-	a.logger.Printf("activity: started (interval=%s, idle_threshold=%s)", a.interval, a.idleThreshold)
+	a.logger.Info("activity service started", "interval", a.interval, "idle_threshold", a.idleThreshold)
 }
 
 // Stop signals the activity loop to stop.
 func (a *ActivityService) Stop() {
 	close(a.stopCh)
-	a.logger.Println("activity: stopped")
+	a.logger.Info("activity service stopped")
 }
 
 func (a *ActivityService) run() {
@@ -78,7 +78,7 @@ func (a *ActivityService) checkAll(ctx context.Context) {
 		Where(entinstance.StatusEQ("running")).
 		All(ctx)
 	if err != nil {
-		a.logger.Printf("activity: query running instances: %v", err)
+		a.logger.Error("failed to query running instances", "error", err)
 		return
 	}
 
@@ -91,7 +91,7 @@ func (a *ActivityService) checkAll(ctx context.Context) {
 func (a *ActivityService) checkInstance(ctx context.Context, inst *ent.Instance, now time.Time) {
 	info, err := a.provider.Activity(ctx, inst.ProviderID)
 	if err != nil {
-		a.logger.Printf("activity: check %s: %v", inst.ProviderID, err)
+		a.logger.Error("activity check failed", "instance_id", inst.ID, "provider_id", inst.ProviderID, "error", err)
 		return
 	}
 
@@ -99,7 +99,7 @@ func (a *ActivityService) checkInstance(ctx context.Context, inst *ent.Instance,
 		// Update last_activity_at
 		_, err := inst.Update().SetLastActivityAt(now).Save(ctx)
 		if err != nil {
-			a.logger.Printf("activity: update timestamp %d: %v", inst.ID, err)
+			a.logger.Error("failed to update activity timestamp", "instance_id", inst.ID, "error", err)
 		}
 		// Notify usage tracker
 		if a.onActive != nil {
@@ -117,9 +117,9 @@ func (a *ActivityService) checkInstance(ctx context.Context, inst *ent.Instance,
 
 	idleDuration := now.Sub(*lastActivity)
 	if idleDuration >= a.idleThreshold {
-		a.logger.Printf("activity: auto-pausing instance %d (idle %s)", inst.ID, idleDuration.Round(time.Minute))
+		a.logger.Info("auto-pausing idle instance", "instance_id", inst.ID, "idle_duration", idleDuration.Round(time.Minute))
 		if err := a.provider.Pause(ctx, inst.ProviderID); err != nil {
-			a.logger.Printf("activity: pause %d: %v", inst.ID, err)
+			a.logger.Error("failed to pause instance", "instance_id", inst.ID, "error", err)
 			return
 		}
 		_, _ = inst.Update().SetStatus("stopped").Save(ctx)

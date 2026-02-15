@@ -3,10 +3,9 @@ package service
 import (
 	"context"
 	"encoding/json"
-	"log"
+	"log/slog"
 	"net/http"
 	"net/http/httptest"
-	"os"
 	"strings"
 	"sync"
 	"testing"
@@ -142,7 +141,7 @@ func setupNetbirdTest(t *testing.T) (*NetbirdService, *mockNetbirdHandler, *http
 	handler := newMockNetbirdHandler()
 	server := httptest.NewServer(handler)
 	client := netbird.New(server.URL, "test-token")
-	logger := log.New(os.Stderr, "test: ", 0)
+	logger := slog.Default()
 	svc := NewNetbirdService(client, logger)
 	return svc, handler, server
 }
@@ -319,7 +318,7 @@ func TestPrepareRollbackOnKeyFailure(t *testing.T) {
 	defer server.Close()
 
 	client := netbird.New(server.URL, "test-token")
-	logger := log.New(os.Stderr, "test: ", 0)
+	logger := slog.Default()
 	svc := NewNetbirdService(client, logger)
 
 	_, err := svc.PrepareNetbirdAccess(context.Background(), 99)

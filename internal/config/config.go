@@ -5,6 +5,7 @@ import "os"
 // Config holds application configuration loaded from environment variables.
 type Config struct {
 	Provider    string
+	Environment string // "development" or "production"
 	DatabaseURL string
 	APIKey      string
 	ListenAddr  string
@@ -46,6 +47,7 @@ type Config struct {
 func Load() *Config {
 	return &Config{
 		Provider:    envOrDefault("PROVIDER", "docker"),
+		Environment: envOrDefault("ENVIRONMENT", "development"),
 		DatabaseURL: envOrDefault("DATABASE_URL", "postgres://cloudcode:cloudcode@localhost:5432/cloudcode?sslmode=disable"),
 		APIKey:      envOrDefault("API_KEY", "dev-api-key"),
 		ListenAddr:  envOrDefault("LISTEN_ADDR", ":8080"),

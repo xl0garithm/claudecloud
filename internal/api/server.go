@@ -27,6 +27,8 @@ func NewRouter(cfg *config.Config, svcs *Services) http.Handler {
 	r.Use(chimiddleware.RequestID)
 	r.Use(chimiddleware.Logger)
 	r.Use(chimiddleware.Recoverer)
+	r.Use(middleware.Security(cfg.BaseURL))
+	r.Use(middleware.BodyLimit(1 << 20)) // 1MB
 
 	if cfg.FrontendURL != "" {
 		r.Use(middleware.CORS(cfg.FrontendURL))

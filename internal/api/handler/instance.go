@@ -3,6 +3,7 @@ package handler
 import (
 	"encoding/json"
 	"errors"
+	"log/slog"
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
@@ -133,6 +134,7 @@ func handleServiceError(w http.ResponseWriter, err error) {
 	case errors.Is(err, provider.ErrInvalidState):
 		response.Error(w, http.StatusConflict, "invalid instance state for operation")
 	default:
+		slog.Error("service error", "error", err)
 		response.Error(w, http.StatusInternalServerError, "internal error")
 	}
 }

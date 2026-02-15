@@ -2,7 +2,7 @@ package service
 
 import (
 	"fmt"
-	"log"
+	"log/slog"
 	"net/smtp"
 )
 
@@ -13,16 +13,16 @@ type Mailer interface {
 
 // LogMailer logs emails to stdout (dev mode).
 type LogMailer struct {
-	logger *log.Logger
+	logger *slog.Logger
 }
 
 // NewLogMailer creates a mailer that logs to stdout instead of sending email.
-func NewLogMailer(logger *log.Logger) *LogMailer {
+func NewLogMailer(logger *slog.Logger) *LogMailer {
 	return &LogMailer{logger: logger}
 }
 
 func (m *LogMailer) SendMagicLink(to, link string) error {
-	m.logger.Printf("MAGIC LINK for %s: %s", to, link)
+	m.logger.Info("magic link generated", "to", to, "link", link)
 	return nil
 }
 

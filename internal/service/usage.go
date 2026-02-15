@@ -2,7 +2,7 @@ package service
 
 import (
 	"context"
-	"log"
+	"log/slog"
 	"time"
 
 	"github.com/logan/cloudcode/internal/ent"
@@ -12,11 +12,11 @@ import (
 type UsageTracker struct {
 	db       *ent.Client
 	interval time.Duration
-	logger   *log.Logger
+	logger   *slog.Logger
 }
 
 // NewUsageTracker creates a new UsageTracker.
-func NewUsageTracker(db *ent.Client, interval time.Duration, logger *log.Logger) *UsageTracker {
+func NewUsageTracker(db *ent.Client, interval time.Duration, logger *slog.Logger) *UsageTracker {
 	return &UsageTracker{
 		db:       db,
 		interval: interval,
@@ -29,7 +29,7 @@ func NewUsageTracker(db *ent.Client, interval time.Duration, logger *log.Logger)
 func (u *UsageTracker) RecordActive(ctx context.Context, inst *ent.Instance) {
 	owner, err := inst.QueryOwner().Only(ctx)
 	if err != nil {
-		u.logger.Printf("usage: query owner for instance %d: %v", inst.ID, err)
+		u.logger.Error("failed to query owner for usage", "instance_id", inst.ID, "error", err)
 		return
 	}
 
@@ -38,6 +38,6 @@ func (u *UsageTracker) RecordActive(ctx context.Context, inst *ent.Instance) {
 		AddUsageHours(hours).
 		Save(ctx)
 	if err != nil {
-		u.logger.Printf("usage: record for user %d: %v", owner.ID, err)
+		u.logger.Error("failed to record usage", "user_id", owner.ID, "error", err)
 	}
 }

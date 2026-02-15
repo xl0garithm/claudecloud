@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"log/slog"
 	"net/http"
 	"net/http/httputil"
 	"net/url"
@@ -84,6 +85,7 @@ func (h *ProxyHandler) Terminal(w http.ResponseWriter, r *http.Request) {
 	targetURL := "ws://" + host + ":7681/ws"
 	backendConn, _, err := websocket.DefaultDialer.Dial(targetURL, nil)
 	if err != nil {
+		slog.Error("terminal proxy: backend dial failed", "host", host, "error", err)
 		clientConn.WriteMessage(websocket.CloseMessage,
 			websocket.FormatCloseMessage(websocket.CloseInternalServerErr, "backend unavailable"))
 		return
@@ -137,6 +139,7 @@ func (h *ProxyHandler) Chat(w http.ResponseWriter, r *http.Request) {
 	backendHeader.Set("Authorization", "Bearer "+agentSecret)
 	backendConn, _, err := websocket.DefaultDialer.Dial(targetURL, backendHeader)
 	if err != nil {
+		slog.Error("chat proxy: backend dial failed", "host", host, "error", err)
 		clientConn.WriteMessage(websocket.CloseMessage,
 			websocket.FormatCloseMessage(websocket.CloseInternalServerErr, "agent unavailable"))
 		return
@@ -211,6 +214,7 @@ func (h *ProxyHandler) proxyHTTP(w http.ResponseWriter, r *http.Request, agentPa
 	}
 
 	proxy.ErrorHandler = func(w http.ResponseWriter, r *http.Request, err error) {
+		slog.Error("http proxy: backend error", "host", host, "path", agentPath, "error", err)
 		response.Error(w, http.StatusBadGateway, "instance agent unavailable")
 	}
 

@@ -2,8 +2,7 @@ package service
 
 import (
 	"context"
-	"log"
-	"os"
+	"log/slog"
 	"testing"
 	"time"
 
@@ -18,7 +17,7 @@ func setupActivityTest(t *testing.T) (*ActivityService, *InstanceService, *ent.C
 	t.Helper()
 	client := enttest.Open(t, "sqlite3", "file:ent_activity?mode=memory&_fk=1")
 	mock := provider.NewMock()
-	logger := log.New(os.Stderr, "test: ", 0)
+	logger := slog.Default()
 
 	instSvc := NewInstanceService(client, mock, "")
 	actSvc := NewActivityService(client, mock, logger, time.Minute, 2*time.Hour)

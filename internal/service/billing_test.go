@@ -4,8 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"log"
-	"os"
+	"log/slog"
 	"testing"
 
 	"github.com/stripe/stripe-go/v82"
@@ -23,7 +22,7 @@ func newTestBillingService(t *testing.T) (*BillingService, *provider.MockProvisi
 
 	mock := provider.NewMock()
 	instanceSvc := NewInstanceService(client, mock, "")
-	logger := log.New(os.Stderr, "test: ", 0)
+	logger := slog.Default()
 
 	billing := &BillingService{
 		db:            client,
