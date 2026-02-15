@@ -16,6 +16,7 @@ import (
 type Services struct {
 	Instance *service.InstanceService
 	Auth     *service.AuthService
+	Billing  *service.BillingService // nil if Stripe not configured
 }
 
 // NewRouter creates the Chi router with all routes and middleware.
@@ -43,6 +44,13 @@ func NewRouter(cfg *config.Config, svcs *Services) http.Handler {
 	r.Post("/auth/login", ah.Login)
 	r.Get("/auth/verify", ah.Verify)
 
+	// Billing webhook (no user auth — verified by Stripe signature)
+	var bh *handler.BillingHandler
+	if svcs.Billing != nil {
+		bh = handler.NewBillingHandler(svcs.Billing)
+		r.Post("/billing/webhook", bh.Webhook)
+	}
+
 	// Authenticated routes (dual-mode: JWT + API key)
 	r.Group(func(r chi.Router) {
 		r.Use(middleware.UserAuth(cfg.JWTSecret, cfg.APIKey))
@@ -59,6 +67,13 @@ func NewRouter(cfg *config.Config, svcs *Services) http.Handler {
 			r.Post("/{id}/pause", ih.Pause)
 			r.Post("/{id}/wake", ih.Wake)
 		})
+
+		// Billing routes (authed)
+		if bh != nil {
+			r.Post("/billing/checkout", bh.CreateCheckout)
+			r.Get("/billing/portal", bh.GetPortal)
+			r.Get("/billing/usage", bh.GetUsage)
+		}
 	})
 
 	return r

@@ -74,6 +74,20 @@ func main() {
 	// Auth service
 	authSvc := service.NewAuthService(db, cfg.JWTSecret, cfg.BaseURL, cfg.FrontendURL, mailer)
 
+	// Billing service (only if Stripe is configured)
+	var billingSvc *service.BillingService
+	if cfg.StripeSecretKey != "" {
+		billingSvc = service.NewBillingService(
+			db, instanceSvc,
+			cfg.StripeSecretKey, cfg.StripeWebhookSecret,
+			cfg.StripePriceStarter, cfg.StripePricePro,
+			cfg.FrontendURL, logger,
+		)
+		logger.Println("billing: stripe enabled")
+	} else {
+		logger.Println("billing: disabled (no STRIPE_SECRET_KEY)")
+	}
+
 	// Activity service
 	activityInterval, err := time.ParseDuration(cfg.ActivityCheckInterval)
 	if err != nil {
@@ -84,12 +98,18 @@ func main() {
 		idleThreshold = 2 * time.Hour
 	}
 	actSvc := service.NewActivityService(db, prov, logger, activityInterval, idleThreshold)
+
+	// Usage tracker hooks into activity checks
+	usageTracker := service.NewUsageTracker(db, activityInterval, logger)
+	actSvc.SetOnActive(usageTracker.RecordActive)
+
 	actSvc.Start()
 
 	// Router
 	svcs := &api.Services{
 		Instance: instanceSvc,
 		Auth:     authSvc,
+		Billing:  billingSvc,
 	}
 	router := api.NewRouter(cfg, svcs)
 

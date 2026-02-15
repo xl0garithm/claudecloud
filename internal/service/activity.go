@@ -18,6 +18,12 @@ type ActivityService struct {
 	interval      time.Duration
 	idleThreshold time.Duration
 	stopCh        chan struct{}
+	onActive      func(ctx context.Context, inst *ent.Instance) // usage callback
+}
+
+// SetOnActive sets a callback invoked when an instance is detected as active.
+func (a *ActivityService) SetOnActive(fn func(ctx context.Context, inst *ent.Instance)) {
+	a.onActive = fn
 }
 
 // NewActivityService creates a new ActivityService.
@@ -94,6 +100,10 @@ func (a *ActivityService) checkInstance(ctx context.Context, inst *ent.Instance,
 		_, err := inst.Update().SetLastActivityAt(now).Save(ctx)
 		if err != nil {
 			a.logger.Printf("activity: update timestamp %d: %v", inst.ID, err)
+		}
+		// Notify usage tracker
+		if a.onActive != nil {
+			a.onActive(ctx, inst)
 		}
 		return
 	}
