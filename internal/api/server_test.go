@@ -7,11 +7,14 @@ import (
 	"testing"
 
 	"github.com/logan/cloudcode/internal/config"
+	"github.com/logan/cloudcode/internal/service"
 )
 
 func TestRoutes(t *testing.T) {
 	cfg := &config.Config{APIKey: "test-key"}
-	router := NewRouter(cfg)
+	// nil service — we're only testing routing and auth, not handler logic
+	var svc *service.InstanceService
+	router := NewRouter(cfg, svc)
 
 	t.Run("healthz returns 200", func(t *testing.T) {
 		req := httptest.NewRequest("GET", "/healthz", nil)
@@ -36,17 +39,6 @@ func TestRoutes(t *testing.T) {
 
 		if rec.Code != http.StatusUnauthorized {
 			t.Fatalf("got %d, want %d", rec.Code, http.StatusUnauthorized)
-		}
-	})
-
-	t.Run("instances with valid key returns 501", func(t *testing.T) {
-		req := httptest.NewRequest("POST", "/instances/", nil)
-		req.Header.Set("X-API-Key", "test-key")
-		rec := httptest.NewRecorder()
-		router.ServeHTTP(rec, req)
-
-		if rec.Code != http.StatusNotImplemented {
-			t.Fatalf("got %d, want %d", rec.Code, http.StatusNotImplemented)
 		}
 	})
 }

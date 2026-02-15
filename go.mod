@@ -6,6 +6,8 @@ require (
 	entgo.io/ent v0.14.5
 	github.com/docker/docker v27.5.1+incompatible
 	github.com/go-chi/chi/v5 v5.2.5
+	github.com/lib/pq v1.11.2
+	github.com/mattn/go-sqlite3 v1.14.17
 )
 
 require (
