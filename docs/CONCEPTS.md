@@ -111,3 +111,78 @@ Error cases return a valid shell script that echoes the error and exits 1, so `c
 The `ActivityService` runs on a configurable interval (default 5 minutes). For each running instance, it calls `provider.Activity()` to check if there's real user activity. If active, it updates `last_activity_at`. If inactive and the idle duration exceeds the threshold (default 2 hours), it auto-pauses the instance.
 
 Docker determines activity by process count — more than 3 processes (entrypoint + tail + zellij) means a user is connected. Hetzner currently uses a simple running/not-running check. The `CronService` handles a separate concern: cleaning up expired Netbird setup keys every 30 minutes.
+
+---
+
+## Phase 3: MVP Dashboard & Billing
+
+### JWT Authentication (Zero-Cost Auth)
+
+**Pattern**: Issue JWTs from the Go backend directly — no external auth provider needed.
+
+The `internal/auth/jwt.go` package provides `GenerateToken` and `ValidateToken` using HMAC-SHA256 signing. Tokens carry three custom claims: `user_id`, `email`, and `purpose` (either "session" or "magic_link"). This purpose field prevents token misuse — a magic link token can't be used as a session token and vice versa.
+
+Magic link flow: `POST /auth/login` finds or creates a user by email, generates a short-lived magic link JWT (15 min), and sends it via email (or logs it in dev mode). `GET /auth/verify?token=` validates the magic link JWT, issues a 24-hour session JWT, and sets an HttpOnly cookie with `SameSite=Lax`. The cookie approach means the browser automatically includes auth on subsequent requests without client-side token management.
+
+### Dual-Mode Auth Middleware
+
+**Pattern**: A single middleware that supports both JWT (dashboard users) and X-API-Key (admin/backwards compat).
+
+The `UserAuth` middleware in `internal/api/middleware/userauth.go` checks three sources in order: `Authorization: Bearer` header, `session` cookie, and `X-API-Key` header. JWT-authenticated requests get `user_id` and `email` in the context. API key requests get `is_admin` in the context. Context helpers (`UserIDFromContext`, `IsAdminContext`) let handlers branch on auth mode.
+
+This is critical for the instance creation endpoint: JWT-authenticated users create instances for themselves (user_id from token). Admin API key users can specify any user_id in the request body, preserving backward compatibility with Phase 1-2 scripts.
+
+### Services Struct (Router Refactor)
+
+**Pattern**: Bundle service dependencies in a single struct instead of a growing parameter list.
+
+The `Services` struct in `internal/api/server.go` holds `InstanceService`, `AuthService`, and `BillingService` (nil when Stripe isn't configured). The router function takes `(cfg, svcs)` instead of individual services. This keeps the function signature stable as new services are added.
+
+Nil-safe service handling: billing routes are only registered when `svcs.Billing != nil`. This means the API works without Stripe configuration — billing endpoints simply don't exist in dev mode.
+
+### Stripe Billing Integration
+
+**Pattern**: Flat billing fields on User instead of a separate Subscription entity — MVP simplicity.
+
+The `BillingService` in `internal/service/billing.go` handles the full Stripe lifecycle:
+
+1. **Checkout**: Creates a Stripe customer (if needed), builds a Checkout Session with plan metadata (starter/pro), and returns the Stripe-hosted payment URL.
+
+2. **Webhooks**: `POST /billing/webhook` verifies the Stripe signature and dispatches events:
+   - `checkout.session.completed`: Activates subscription, auto-provisions instance
+   - `customer.subscription.updated`: Syncs status changes
+   - `customer.subscription.deleted`: Marks canceled, pauses running instance
+   - `invoice.payment_failed`: Marks past_due
+
+3. **Portal**: Creates a Stripe Billing Portal session for self-service management (cancel, update payment method, view invoices).
+
+User schema carries `stripe_customer_id`, `stripe_subscription_id`, `subscription_status`, `plan`, and `usage_hours` directly — no joins needed for billing checks.
+
+### Usage Metering
+
+**Pattern**: Piggyback on the existing activity polling loop to track usage hours.
+
+The `UsageTracker` in `internal/service/usage.go` hooks into the `ActivityService` via a callback (`SetOnActive`). Every time the activity checker detects an active instance, it calls `RecordActive`, which adds the polling interval (in hours) to the user's `usage_hours` field. If the activity interval is 5 minutes and an instance is active for an hour, 12 callbacks fire and add `12 * (5/60) = 1.0` hour.
+
+This is intentionally approximate — it's good enough for billing and avoids the complexity of precise session tracking. The usage field accumulates monotonically; billing period resets would be handled by a future cron job.
+
+### Next.js Dashboard
+
+**Pattern**: Minimal Next.js 14 with App Router — server-side rendering not needed for an authenticated SPA.
+
+The dashboard at `web/` is a client-rendered React app that talks to the Go API via `credentials: "include"` fetch calls (so the HttpOnly session cookie flows automatically). Key pages:
+
+- **Landing** (`/`): Hero + two-tier pricing cards
+- **Login** (`/auth/login`): Email form → "check your email" confirmation
+- **Verify** (`/auth/verify`): Token validation → redirect to dashboard
+- **Dashboard** (`/dashboard`): Plan status, usage hours, instance card with wake/pause buttons, connect command
+
+The dashboard layout includes an auth guard that redirects to login if `/auth/me` fails. The API client (`lib/api.ts`) is a typed wrapper around fetch with error extraction from JSON responses.
+
+### CLI Connect Tool
+
+**Pattern**: Bash CLI that stores a session JWT and uses it for authenticated API calls.
+
+The `scripts/claude-cloud` script provides `login`, `verify`, `connect`, `status`, and `logout` commands. After magic link verification, the session JWT is stored in `~/.claude-cloud/token`. The `connect` command sends the stored token as a `Bearer` header to `/connect.sh`, which returns a provider-specific connection script.
+
+The connect endpoint (`/connect.sh`) was upgraded to support three auth methods: Bearer JWT, session cookie, and `?user_id` parameter (legacy). This means the CLI, the browser dashboard, and the original curl-based flow all work with the same endpoint.

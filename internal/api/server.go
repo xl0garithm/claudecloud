@@ -35,9 +35,13 @@ func NewRouter(cfg *config.Config, svcs *Services) http.Handler {
 	// Health check (no auth)
 	r.Get("/healthz", handler.Health())
 
-	// Connect script (no auth — script is fetched by curl)
-	ch := handler.NewConnectHandler(svcs.Instance)
+	// Connect script (no user auth — supports Bearer, cookie, or ?user_id)
+	ch := handler.NewConnectHandler(svcs.Instance, cfg.JWTSecret)
 	r.Get("/connect.sh", ch.ServeScript)
+
+	// Install script (no auth)
+	ih := handler.NewInstallHandler(cfg.BaseURL)
+	r.Get("/install.sh", ih.ServeScript)
 
 	// Auth routes (no auth required)
 	ah := handler.NewAuthHandler(svcs.Auth, cfg.FrontendURL)
@@ -59,13 +63,13 @@ func NewRouter(cfg *config.Config, svcs *Services) http.Handler {
 		r.Get("/auth/me", ah.Me)
 
 		// Instance routes
-		ih := handler.NewInstanceHandler(svcs.Instance)
+		instH := handler.NewInstanceHandler(svcs.Instance)
 		r.Route("/instances", func(r chi.Router) {
-			r.Post("/", ih.Create)
-			r.Get("/{id}", ih.Get)
-			r.Delete("/{id}", ih.Delete)
-			r.Post("/{id}/pause", ih.Pause)
-			r.Post("/{id}/wake", ih.Wake)
+			r.Post("/", instH.Create)
+			r.Get("/{id}", instH.Get)
+			r.Delete("/{id}", instH.Delete)
+			r.Post("/{id}/pause", instH.Pause)
+			r.Post("/{id}/wake", instH.Wake)
 		})
 
 		// Billing routes (authed)

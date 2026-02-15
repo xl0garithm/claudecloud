@@ -22,12 +22,11 @@ func setupConnectTest(t *testing.T) (*ConnectHandler, *service.InstanceService, 
 
 	mock := provider.NewMock()
 	svc := service.NewInstanceService(client, mock)
-	ch := NewConnectHandler(svc)
+	ch := NewConnectHandler(svc, "test-jwt-secret")
 
 	// Create test user
 	u, err := client.User.Create().
 		SetEmail("connect-test@example.com").
-		SetAPIKey("test-key-connect").
 		Save(context.Background())
 	if err != nil {
 		t.Fatalf("create test user: %v", err)

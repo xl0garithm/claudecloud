@@ -1,0 +1,131 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# Claude Cloud CLI
+# Usage: claude-cloud <command>
+#   login     Login with your email
+#   verify    Verify magic link token
+#   connect   Connect to your instance
+#   status    Show account status
+#   logout    Remove stored credentials
+
+API_URL="${CLAUDE_CLOUD_URL:-http://localhost:8080}"
+TOKEN_FILE="${HOME}/.claude-cloud/token"
+
+# Ensure config dir exists
+mkdir -p "$(dirname "$TOKEN_FILE")"
+
+cmd_login() {
+    printf "Email: "
+    read -r email
+
+    response=$(curl -s -w "\n%{http_code}" -X POST "$API_URL/auth/login" \
+        -H "Content-Type: application/json" \
+        -d "{\"email\": \"$email\"}")
+
+    http_code=$(echo "$response" | tail -1)
+    body=$(echo "$response" | head -n -1)
+
+    if [ "$http_code" = "200" ]; then
+        echo "Magic link sent to $email."
+        echo "Check your email and copy the token from the link."
+        echo ""
+        echo "Then run: claude-cloud verify <token>"
+    else
+        echo "Error: $body"
+        exit 1
+    fi
+}
+
+cmd_verify() {
+    local token="${1:-}"
+    if [ -z "$token" ]; then
+        echo "Usage: claude-cloud verify <token>"
+        exit 1
+    fi
+
+    response=$(curl -s -w "\n%{http_code}" "$API_URL/auth/verify?token=$token" \
+        -H "Accept: application/json")
+
+    http_code=$(echo "$response" | tail -1)
+    body=$(echo "$response" | head -n -1)
+
+    if [ "$http_code" != "200" ]; then
+        echo "Verification failed: $body"
+        exit 1
+    fi
+
+    # Extract session token from JSON response
+    session_token=$(echo "$body" | sed -n 's/.*"token":"\([^"]*\)".*/\1/p')
+
+    if [ -z "$session_token" ]; then
+        echo "Failed to extract session token."
+        exit 1
+    fi
+
+    echo "$session_token" > "$TOKEN_FILE"
+    chmod 600 "$TOKEN_FILE"
+    echo "Logged in successfully."
+}
+
+cmd_connect() {
+    if [ ! -f "$TOKEN_FILE" ]; then
+        echo "Not logged in. Run: claude-cloud login"
+        exit 1
+    fi
+
+    token=$(cat "$TOKEN_FILE")
+
+    # Get connect script with Bearer auth
+    script=$(curl -fsSL "$API_URL/connect.sh" \
+        -H "Authorization: Bearer $token")
+
+    exec bash -c "$script"
+}
+
+cmd_status() {
+    if [ ! -f "$TOKEN_FILE" ]; then
+        echo "Not logged in. Run: claude-cloud login"
+        exit 1
+    fi
+
+    token=$(cat "$TOKEN_FILE")
+
+    response=$(curl -s "$API_URL/auth/me" \
+        -H "Authorization: Bearer $token")
+
+    # Pretty-print if python3 is available
+    if command -v python3 &>/dev/null; then
+        echo "$response" | python3 -m json.tool 2>/dev/null || echo "$response"
+    else
+        echo "$response"
+    fi
+}
+
+cmd_logout() {
+    rm -f "$TOKEN_FILE"
+    echo "Logged out."
+}
+
+case "${1:-help}" in
+    login)   cmd_login ;;
+    verify)  cmd_verify "${2:-}" ;;
+    connect) cmd_connect ;;
+    status)  cmd_status ;;
+    logout)  cmd_logout ;;
+    help|--help|-h|*)
+        echo "Claude Cloud CLI"
+        echo ""
+        echo "Usage: claude-cloud <command>"
+        echo ""
+        echo "Commands:"
+        echo "  login     Login with your email"
+        echo "  verify    Verify magic link token"
+        echo "  connect   Connect to your instance"
+        echo "  status    Show account status"
+        echo "  logout    Remove stored credentials"
+        echo ""
+        echo "Environment:"
+        echo "  CLAUDE_CLOUD_URL  API base URL (default: http://localhost:8080)"
+        ;;
+esac

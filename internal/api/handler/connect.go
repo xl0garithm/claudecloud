@@ -4,33 +4,59 @@ import (
 	"fmt"
 	"net/http"
 	"strconv"
+	"strings"
 
+	"github.com/logan/cloudcode/internal/auth"
 	"github.com/logan/cloudcode/internal/service"
 )
 
 // ConnectHandler serves the connect script endpoint.
 type ConnectHandler struct {
-	svc *service.InstanceService
+	svc       *service.InstanceService
+	jwtSecret string
 }
 
 // NewConnectHandler creates a new ConnectHandler.
-func NewConnectHandler(svc *service.InstanceService) *ConnectHandler {
-	return &ConnectHandler{svc: svc}
+func NewConnectHandler(svc *service.InstanceService, jwtSecret string) *ConnectHandler {
+	return &ConnectHandler{svc: svc, jwtSecret: jwtSecret}
 }
 
-// ServeScript handles GET /connect.sh?user_id={id}.
+// ServeScript handles GET /connect.sh.
+// Supports Bearer JWT, session cookie, or ?user_id parameter.
 // Returns a shell script that connects to the user's running instance.
 func (h *ConnectHandler) ServeScript(w http.ResponseWriter, r *http.Request) {
-	userIDStr := r.URL.Query().Get("user_id")
-	if userIDStr == "" {
-		writeErrorScript(w, http.StatusBadRequest, "missing user_id parameter")
-		return
+	var userID int
+
+	// Try Bearer JWT auth
+	if authHeader := r.Header.Get("Authorization"); strings.HasPrefix(authHeader, "Bearer ") {
+		tokenStr := strings.TrimPrefix(authHeader, "Bearer ")
+		if claims, err := auth.ValidateToken(h.jwtSecret, tokenStr); err == nil && claims.Purpose == "session" {
+			userID = claims.UserID
+		}
 	}
 
-	userID, err := strconv.Atoi(userIDStr)
-	if err != nil || userID <= 0 {
-		writeErrorScript(w, http.StatusBadRequest, "invalid user_id parameter")
-		return
+	// Try session cookie
+	if userID == 0 {
+		if cookie, err := r.Cookie("session"); err == nil {
+			if claims, err := auth.ValidateToken(h.jwtSecret, cookie.Value); err == nil && claims.Purpose == "session" {
+				userID = claims.UserID
+			}
+		}
+	}
+
+	// Fall back to ?user_id parameter
+	if userID == 0 {
+		userIDStr := r.URL.Query().Get("user_id")
+		if userIDStr == "" {
+			writeErrorScript(w, http.StatusBadRequest, "missing authentication or user_id parameter")
+			return
+		}
+		var err error
+		userID, err = strconv.Atoi(userIDStr)
+		if err != nil || userID <= 0 {
+			writeErrorScript(w, http.StatusBadRequest, "invalid user_id parameter")
+			return
+		}
 	}
 
 	info, err := h.svc.GetConnectInfo(r.Context(), userID)
