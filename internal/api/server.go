@@ -55,6 +55,9 @@ func NewRouter(cfg *config.Config, svcs *Services) http.Handler {
 		r.Post("/billing/webhook", bh.Webhook)
 	}
 
+	// Proxy handler for instance terminal/chat/files
+	proxyH := handler.NewProxyHandler(svcs.Instance, cfg.JWTSecret)
+
 	// Authenticated routes (dual-mode: JWT + API key)
 	r.Group(func(r chi.Router) {
 		r.Use(middleware.UserAuth(cfg.JWTSecret, cfg.APIKey))
@@ -66,10 +69,19 @@ func NewRouter(cfg *config.Config, svcs *Services) http.Handler {
 		instH := handler.NewInstanceHandler(svcs.Instance)
 		r.Route("/instances", func(r chi.Router) {
 			r.Post("/", instH.Create)
+			r.Get("/mine", handler.GetMine(svcs.Instance))
 			r.Get("/{id}", instH.Get)
 			r.Delete("/{id}", instH.Delete)
 			r.Post("/{id}/pause", instH.Pause)
 			r.Post("/{id}/wake", instH.Wake)
+
+			// Proxy routes to instance services
+			r.Get("/{id}/terminal", proxyH.Terminal)
+			r.Get("/{id}/chat", proxyH.Chat)
+			r.Get("/{id}/files", proxyH.Files)
+			r.Get("/{id}/files/read", proxyH.FilesRead)
+			r.Get("/{id}/projects", proxyH.Projects)
+			r.Post("/{id}/projects/clone", proxyH.ProjectsClone)
 		})
 
 		// Billing routes (authed)

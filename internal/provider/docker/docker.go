@@ -27,12 +27,17 @@ type Provider struct {
 }
 
 // New creates a new Docker provider.
+// Eagerly ensures the claude-net network exists so docker-compose can reference it.
 func New() (*Provider, error) {
 	cli, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
 	if err != nil {
 		return nil, fmt.Errorf("docker client: %w", err)
 	}
-	return &Provider{cli: cli}, nil
+	p := &Provider{cli: cli}
+	if err := p.ensureNetwork(context.Background()); err != nil {
+		return nil, fmt.Errorf("ensure network on startup: %w", err)
+	}
+	return p, nil
 }
 
 func containerName(userID int) string {

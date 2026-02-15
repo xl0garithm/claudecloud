@@ -91,3 +91,6 @@ func IsAdminContext(ctx context.Context) bool {
 	}
 	return false
 }
+
+// TestUserIDKey returns the context key for user_id (for testing only).
+func TestUserIDKey() contextKey { return userIDKey }

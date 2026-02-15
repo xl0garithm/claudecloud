@@ -32,6 +32,9 @@ services:
       ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
+    networks:
+      - default
+      - claude-net
     depends_on:
       postgres:
         condition: service_healthy
@@ -49,3 +52,7 @@ services:
 
 volumes:
   pgdata:
+
+networks:
+  claude-net:
+    external: true
