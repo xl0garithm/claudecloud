@@ -16,11 +16,17 @@ import (
 type InstanceService struct {
 	db       *ent.Client
 	provider provider.Provisioner
+	netbird  *NetbirdService // nil when PROVIDER=docker
 }
 
 // NewInstanceService creates a new InstanceService.
 func NewInstanceService(db *ent.Client, prov provider.Provisioner) *InstanceService {
 	return &InstanceService{db: db, provider: prov}
+}
+
+// SetNetbirdService wires in the optional Netbird service for Hetzner mode.
+func (s *InstanceService) SetNetbirdService(nb *NetbirdService) {
+	s.netbird = nb
 }
 
 // InstanceResponse is the API response for an instance.
@@ -46,6 +52,16 @@ func toResponse(inst *ent.Instance) *InstanceResponse {
 	}
 }
 
+// ConnectInfo holds the data needed to generate a connect script.
+type ConnectInfo struct {
+	Provider     string
+	Host         string
+	ProviderID   string
+	Status       string
+	NetbirdConfig string
+	UserID       int
+}
+
 // Create provisions a new instance for the given user.
 func (s *InstanceService) Create(ctx context.Context, userID int) (*InstanceResponse, error) {
 	// Check for existing active instance
@@ -62,22 +78,51 @@ func (s *InstanceService) Create(ctx context.Context, userID int) (*InstanceResp
 		return nil, provider.ErrAlreadyExists
 	}
 
+	var opts provider.CreateOptions
+	var prep *NetbirdPrep
+
+	// Phase 1: Prepare Netbird access (Hetzner only)
+	if s.netbird != nil {
+		prep, err = s.netbird.PrepareNetbirdAccess(ctx, userID)
+		if err != nil {
+			return nil, fmt.Errorf("netbird prepare: %w", err)
+		}
+		opts.NetbirdSetupKey = prep.SetupKey
+	}
+
 	// Call provider to create
-	provInst, err := s.provider.Create(ctx, userID)
+	provInst, err := s.provider.Create(ctx, userID, opts)
 	if err != nil {
 		return nil, fmt.Errorf("provider create: %w", err)
 	}
 
+	// Phase 2: Finalize Netbird access (route + policy)
+	var netbirdConfigStr string
+	if s.netbird != nil && prep != nil {
+		nbCfg, err := s.netbird.FinalizeNetbirdAccess(ctx, userID, prep)
+		if err != nil {
+			// Best-effort cleanup of provider instance
+			_ = s.provider.Destroy(ctx, provInst.ID)
+			return nil, fmt.Errorf("netbird finalize: %w", err)
+		}
+		netbirdConfigStr = MarshalNetbirdConfig(nbCfg)
+	}
+
 	// Save to DB
-	inst, err := s.db.Instance.Create().
+	create := s.db.Instance.Create().
 		SetProvider(provInst.Provider).
 		SetProviderID(provInst.ProviderID).
 		SetHost(provInst.Host).
 		SetPort(provInst.Port).
 		SetStatus(string(provInst.Status)).
 		SetVolumeID(provInst.VolumeID).
-		SetOwnerID(userID).
-		Save(ctx)
+		SetOwnerID(userID)
+
+	if netbirdConfigStr != "" {
+		create = create.SetNetbirdConfig(netbirdConfigStr)
+	}
+
+	inst, err := create.Save(ctx)
 	if err != nil {
 		// Best-effort cleanup on DB failure
 		_ = s.provider.Destroy(ctx, provInst.ID)
@@ -120,6 +165,14 @@ func (s *InstanceService) Delete(ctx context.Context, id int) error {
 
 	if inst.Status == "destroyed" {
 		return provider.ErrInvalidState
+	}
+
+	// Teardown Netbird if configured
+	if s.netbird != nil && inst.NetbirdConfig != "" {
+		nbCfg, err := UnmarshalNetbirdConfig(inst.NetbirdConfig)
+		if err == nil && nbCfg != nil {
+			_ = s.netbird.TeardownUser(ctx, nbCfg)
+		}
 	}
 
 	// Destroy via provider using the container/instance name
@@ -188,6 +241,53 @@ func (s *InstanceService) GetByProviderID(ctx context.Context, providerID string
 		return nil, fmt.Errorf("query by provider_id: %w", err)
 	}
 	return toResponse(inst), nil
+}
+
+// GetByUserID looks up the active instance for a user.
+func (s *InstanceService) GetByUserID(ctx context.Context, userID int) (*InstanceResponse, error) {
+	inst, err := s.db.Instance.Query().
+		Where(
+			entinstance.HasOwnerWith(entuser.IDEQ(userID)),
+			entinstance.StatusIn("provisioning", "running", "stopped"),
+		).
+		Only(ctx)
+	if err != nil {
+		if ent.IsNotFound(err) {
+			return nil, provider.ErrNotFound
+		}
+		return nil, fmt.Errorf("query by user_id: %w", err)
+	}
+	return toResponse(inst), nil
+}
+
+// GetConnectInfo returns the data needed to generate a connect script.
+func (s *InstanceService) GetConnectInfo(ctx context.Context, userID int) (*ConnectInfo, error) {
+	inst, err := s.db.Instance.Query().
+		Where(
+			entinstance.HasOwnerWith(entuser.IDEQ(userID)),
+			entinstance.StatusIn("running"),
+		).
+		Only(ctx)
+	if err != nil {
+		if ent.IsNotFound(err) {
+			return nil, provider.ErrNotFound
+		}
+		return nil, fmt.Errorf("query connect info: %w", err)
+	}
+
+	owner, err := inst.QueryOwner().Only(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("query owner: %w", err)
+	}
+
+	return &ConnectInfo{
+		Provider:      inst.Provider,
+		Host:          inst.Host,
+		ProviderID:    inst.ProviderID,
+		Status:        inst.Status,
+		NetbirdConfig: inst.NetbirdConfig,
+		UserID:        owner.ID,
+	}, nil
 }
 
 // ParseID converts a string ID from URL params to int.

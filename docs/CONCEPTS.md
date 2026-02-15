@@ -55,3 +55,59 @@ The user_instance module provisions a Hetzner server with cloud-init (Node.js, C
 The `APIKeyAuth` middleware in `internal/api/middleware/auth.go` compares the header value against the configured key. Missing key returns 401 "missing API key"; wrong key returns 401 "invalid API key". This is intentionally simple — Clerk/OAuth is added in Phase 3 when the dashboard ships.
 
 The health endpoint (`/healthz`) is excluded from auth so monitoring tools can check liveness without credentials.
+
+---
+
+## Phase 2: Core Provisioning & Zero-Trust
+
+### Netbird HTTP Client (Thin REST Wrapper)
+
+**Pattern**: Wrap an external REST API in a typed Go client with a single `do()` helper.
+
+The `internal/netbird/` package provides a thin client for the Netbird Management API. A single `do()` method handles JSON marshaling/unmarshaling, authorization headers, and error response parsing. Each resource (groups, setup keys, routes, policies) gets its own file with CRUD methods that delegate to `do()`.
+
+The `APIError` type implements the `error` interface and carries the HTTP status code, so callers can distinguish between 403 (auth issue) and 404 (not found) without parsing strings. All methods accept a `context.Context` for cancellation and timeouts.
+
+### Two-Phase Netbird Provisioning
+
+**Pattern**: Split network setup into "before server" and "after server" phases because cloud-init needs the setup key at boot time.
+
+The `NetbirdService` in `internal/service/netbird.go` orchestrates zero-trust networking in two phases:
+
+1. **PrepareNetbirdAccess**: Creates a peer group and one-off setup key *before* the server boots. The setup key is passed to cloud-init via Terraform variables, so the instance auto-enrolls into Netbird on first boot.
+
+2. **FinalizeNetbirdAccess**: After the server is up, creates a route (so the user's Netbird peer can reach the instance subnet) and a policy (allowing bidirectional traffic within the user's group).
+
+Both phases include rollback logic — if setup key creation fails, the already-created group is deleted. If policy creation fails, the route is cleaned up. `TeardownUser` deletes resources in reverse order (policy, route, group).
+
+### CreateOptions and Provider Interface Extension
+
+**Pattern**: Add optional parameters to the `Provisioner.Create` signature via an options struct.
+
+The `CreateOptions` struct carries provider-specific parameters (like `NetbirdSetupKey`) without polluting the interface with provider-specific arguments. Docker ignores the options; Hetzner passes the setup key through Terraform variables to cloud-init. This keeps the interface clean while allowing provider-specific behavior.
+
+The `Activity` method was also added to the interface for idle detection. Docker checks process count via `ContainerTop`; Hetzner checks server running status. The mock provider returns configurable results for testing.
+
+### Shared Bootstrap Scripts
+
+**Pattern**: Single-source setup scripts used by both Docker images and cloud-init templates.
+
+The `scripts/instance/` directory contains idempotent scripts that work on both Docker (via `COPY` + `RUN`) and Hetzner (via cloud-init `write_files` + `runcmd`). The `setup.sh` script checks for each tool before installing it, so it's safe to run multiple times. The Zellij layout (`claude-layout.kdl`) defines a 70/30 split between a Claude pane and a shell pane.
+
+The Dockerfile uses the repo root as build context (instead of `docker/`) so it can `COPY` scripts from `scripts/instance/`. Cloud-init embeds the same scripts inline via `write_files` blocks.
+
+### Connect Script Endpoint
+
+**Pattern**: Serve a provider-aware shell script that users can `curl | bash` to connect to their instance.
+
+`GET /connect.sh?user_id={id}` returns a shell script customized for the user's provider. Docker mode generates `docker exec -it claude-{userID} zellij attach claude`. Hetzner mode generates a script that installs Netbird, connects to the mesh, and runs `mosh claude@{IP} -- zellij attach claude`.
+
+Error cases return a valid shell script that echoes the error and exits 1, so `curl | bash` always gives user-visible feedback rather than silent failure.
+
+### Activity Polling and Auto-Pause
+
+**Pattern**: Background service polls running instances and auto-pauses idle ones to save resources.
+
+The `ActivityService` runs on a configurable interval (default 5 minutes). For each running instance, it calls `provider.Activity()` to check if there's real user activity. If active, it updates `last_activity_at`. If inactive and the idle duration exceeds the threshold (default 2 hours), it auto-pauses the instance.
+
+Docker determines activity by process count — more than 3 processes (entrypoint + tail + zellij) means a user is connected. Hetzner currently uses a simple running/not-running check. The `CronService` handles a separate concern: cleaning up expired Netbird setup keys every 30 minutes.

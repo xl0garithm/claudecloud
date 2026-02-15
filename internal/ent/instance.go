@@ -30,6 +30,10 @@ type Instance struct {
 	Status string `json:"status,omitempty"`
 	// VolumeID holds the value of the "volume_id" field.
 	VolumeID string `json:"volume_id,omitempty"`
+	// JSON-encoded Netbird config (group ID, route ID, policy ID, setup key ID)
+	NetbirdConfig string `json:"netbird_config,omitempty"`
+	// Last detected activity timestamp for idle detection
+	LastActivityAt *time.Time `json:"last_activity_at,omitempty"`
 	// CreatedAt holds the value of the "created_at" field.
 	CreatedAt time.Time `json:"created_at,omitempty"`
 	// UpdatedAt holds the value of the "updated_at" field.
@@ -68,9 +72,9 @@ func (*Instance) scanValues(columns []string) ([]any, error) {
 		switch columns[i] {
 		case instance.FieldID, instance.FieldPort:
 			values[i] = new(sql.NullInt64)
-		case instance.FieldProvider, instance.FieldProviderID, instance.FieldHost, instance.FieldStatus, instance.FieldVolumeID:
+		case instance.FieldProvider, instance.FieldProviderID, instance.FieldHost, instance.FieldStatus, instance.FieldVolumeID, instance.FieldNetbirdConfig:
 			values[i] = new(sql.NullString)
-		case instance.FieldCreatedAt, instance.FieldUpdatedAt:
+		case instance.FieldLastActivityAt, instance.FieldCreatedAt, instance.FieldUpdatedAt:
 			values[i] = new(sql.NullTime)
 		case instance.ForeignKeys[0]: // user_instances
 			values[i] = new(sql.NullInt64)
@@ -130,6 +134,19 @@ func (_m *Instance) assignValues(columns []string, values []any) error {
 				return fmt.Errorf("unexpected type %T for field volume_id", values[i])
 			} else if value.Valid {
 				_m.VolumeID = value.String
+			}
+		case instance.FieldNetbirdConfig:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field netbird_config", values[i])
+			} else if value.Valid {
+				_m.NetbirdConfig = value.String
+			}
+		case instance.FieldLastActivityAt:
+			if value, ok := values[i].(*sql.NullTime); !ok {
+				return fmt.Errorf("unexpected type %T for field last_activity_at", values[i])
+			} else if value.Valid {
+				_m.LastActivityAt = new(time.Time)
+				*_m.LastActivityAt = value.Time
 			}
 		case instance.FieldCreatedAt:
 			if value, ok := values[i].(*sql.NullTime); !ok {
@@ -208,6 +225,14 @@ func (_m *Instance) String() string {
 	builder.WriteString(", ")
 	builder.WriteString("volume_id=")
 	builder.WriteString(_m.VolumeID)
+	builder.WriteString(", ")
+	builder.WriteString("netbird_config=")
+	builder.WriteString(_m.NetbirdConfig)
+	builder.WriteString(", ")
+	if v := _m.LastActivityAt; v != nil {
+		builder.WriteString("last_activity_at=")
+		builder.WriteString(v.Format(time.ANSIC))
+	}
 	builder.WriteString(", ")
 	builder.WriteString("created_at=")
 	builder.WriteString(_m.CreatedAt.Format(time.ANSIC))

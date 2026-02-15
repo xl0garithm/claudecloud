@@ -28,6 +28,13 @@ func (Instance) Fields() []ent.Field {
 			Default("provisioning"),
 		field.String("volume_id").
 			Optional(),
+		field.String("netbird_config").
+			Optional().
+			Comment("JSON-encoded Netbird config (group ID, route ID, policy ID, setup key ID)"),
+		field.Time("last_activity_at").
+			Optional().
+			Nillable().
+			Comment("Last detected activity timestamp for idle detection"),
 		field.Time("created_at").
 			Default(time.Now).
 			Immutable(),

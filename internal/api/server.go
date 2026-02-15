@@ -24,6 +24,10 @@ func NewRouter(cfg *config.Config, svc *service.InstanceService) http.Handler {
 	// Health check (no auth)
 	r.Get("/healthz", handler.Health())
 
+	// Connect script (no auth — script is fetched by curl)
+	ch := handler.NewConnectHandler(svc)
+	r.Get("/connect.sh", ch.ServeScript)
+
 	// Instance routes (API key auth)
 	ih := handler.NewInstanceHandler(svc)
 	r.Route("/instances", func(r chi.Router) {

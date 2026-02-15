@@ -30,11 +30,23 @@ type Instance struct {
 	UpdatedAt  time.Time `json:"updated_at"`
 }
 
+// CreateOptions carries optional parameters for instance creation.
+// Docker ignores these; Hetzner passes the setup key to cloud-init.
+type CreateOptions struct {
+	NetbirdSetupKey string
+}
+
+// ActivityInfo holds activity data for an instance.
+type ActivityInfo struct {
+	IsActive     bool
+	ProcessCount int
+}
+
 // Provisioner defines the interface for instance lifecycle management.
 // Both Docker (local dev) and Hetzner (production) implement this interface.
 type Provisioner interface {
 	// Create provisions a new instance for the given user.
-	Create(ctx context.Context, userID int) (*Instance, error)
+	Create(ctx context.Context, userID int, opts CreateOptions) (*Instance, error)
 
 	// Destroy tears down the instance but preserves the data volume.
 	Destroy(ctx context.Context, instanceID string) error
@@ -47,4 +59,7 @@ type Provisioner interface {
 
 	// Wake starts a previously paused instance.
 	Wake(ctx context.Context, instanceID string) error
+
+	// Activity returns the current activity state of an instance.
+	Activity(ctx context.Context, instanceID string) (*ActivityInfo, error)
 }

@@ -15,6 +15,7 @@ import (
 	"github.com/logan/cloudcode/internal/config"
 	"github.com/logan/cloudcode/internal/ent"
 	"github.com/logan/cloudcode/internal/ent/migrate"
+	"github.com/logan/cloudcode/internal/netbird"
 	"github.com/logan/cloudcode/internal/provider/factory"
 	"github.com/logan/cloudcode/internal/service"
 )
@@ -43,8 +44,36 @@ func main() {
 	}
 	logger.Printf("provider: %s", cfg.Provider)
 
-	// Service + Router
+	// Service layer
 	svc := service.NewInstanceService(db, prov)
+
+	// Netbird (Hetzner only)
+	var cronSvc *service.CronService
+	if cfg.Provider == "hetzner" && cfg.NetbirdAPIToken != "" {
+		nbClient := netbird.New(cfg.NetbirdAPIURL, cfg.NetbirdAPIToken)
+		nbSvc := service.NewNetbirdService(nbClient, logger)
+		svc.SetNetbirdService(nbSvc)
+		logger.Println("netbird: enabled")
+
+		// Cron for expired key cleanup
+		cronInterval := 30 * time.Minute
+		cronSvc = service.NewCronService(nbSvc, logger, cronInterval)
+		cronSvc.Start()
+	}
+
+	// Activity service
+	activityInterval, err := time.ParseDuration(cfg.ActivityCheckInterval)
+	if err != nil {
+		activityInterval = 5 * time.Minute
+	}
+	idleThreshold, err := time.ParseDuration(cfg.IdleThreshold)
+	if err != nil {
+		idleThreshold = 2 * time.Hour
+	}
+	actSvc := service.NewActivityService(db, prov, logger, activityInterval, idleThreshold)
+	actSvc.Start()
+
+	// Router
 	router := api.NewRouter(cfg, svc)
 
 	// HTTP Server
@@ -69,6 +98,11 @@ func main() {
 
 	<-done
 	logger.Println("shutting down...")
+
+	actSvc.Stop()
+	if cronSvc != nil {
+		cronSvc.Stop()
+	}
 
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()

@@ -9,6 +9,14 @@ type Config struct {
 	APIKey      string
 	ListenAddr  string
 	HCloudToken string
+
+	// Netbird (only needed when PROVIDER=hetzner)
+	NetbirdAPIURL   string
+	NetbirdAPIToken string
+
+	// Activity detection
+	ActivityCheckInterval string
+	IdleThreshold         string
 }
 
 // Load reads configuration from environment variables with sensible defaults.
@@ -19,6 +27,12 @@ func Load() *Config {
 		APIKey:      envOrDefault("API_KEY", "dev-api-key"),
 		ListenAddr:  envOrDefault("LISTEN_ADDR", ":8080"),
 		HCloudToken: os.Getenv("HCLOUD_TOKEN"),
+
+		NetbirdAPIURL:   envOrDefault("NETBIRD_API_URL", "https://api.netbird.io"),
+		NetbirdAPIToken: os.Getenv("NETBIRD_API_TOKEN"),
+
+		ActivityCheckInterval: envOrDefault("ACTIVITY_CHECK_INTERVAL", "5m"),
+		IdleThreshold:         envOrDefault("IDLE_THRESHOLD", "2h"),
 	}
 }
 

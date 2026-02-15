@@ -138,6 +138,46 @@ func (_u *InstanceUpdate) ClearVolumeID() *InstanceUpdate {
 	return _u
 }
 
+// SetNetbirdConfig sets the "netbird_config" field.
+func (_u *InstanceUpdate) SetNetbirdConfig(v string) *InstanceUpdate {
+	_u.mutation.SetNetbirdConfig(v)
+	return _u
+}
+
+// SetNillableNetbirdConfig sets the "netbird_config" field if the given value is not nil.
+func (_u *InstanceUpdate) SetNillableNetbirdConfig(v *string) *InstanceUpdate {
+	if v != nil {
+		_u.SetNetbirdConfig(*v)
+	}
+	return _u
+}
+
+// ClearNetbirdConfig clears the value of the "netbird_config" field.
+func (_u *InstanceUpdate) ClearNetbirdConfig() *InstanceUpdate {
+	_u.mutation.ClearNetbirdConfig()
+	return _u
+}
+
+// SetLastActivityAt sets the "last_activity_at" field.
+func (_u *InstanceUpdate) SetLastActivityAt(v time.Time) *InstanceUpdate {
+	_u.mutation.SetLastActivityAt(v)
+	return _u
+}
+
+// SetNillableLastActivityAt sets the "last_activity_at" field if the given value is not nil.
+func (_u *InstanceUpdate) SetNillableLastActivityAt(v *time.Time) *InstanceUpdate {
+	if v != nil {
+		_u.SetLastActivityAt(*v)
+	}
+	return _u
+}
+
+// ClearLastActivityAt clears the value of the "last_activity_at" field.
+func (_u *InstanceUpdate) ClearLastActivityAt() *InstanceUpdate {
+	_u.mutation.ClearLastActivityAt()
+	return _u
+}
+
 // SetUpdatedAt sets the "updated_at" field.
 func (_u *InstanceUpdate) SetUpdatedAt(v time.Time) *InstanceUpdate {
 	_u.mutation.SetUpdatedAt(v)
@@ -261,6 +301,18 @@ func (_u *InstanceUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 	}
 	if _u.mutation.VolumeIDCleared() {
 		_spec.ClearField(instance.FieldVolumeID, field.TypeString)
+	}
+	if value, ok := _u.mutation.NetbirdConfig(); ok {
+		_spec.SetField(instance.FieldNetbirdConfig, field.TypeString, value)
+	}
+	if _u.mutation.NetbirdConfigCleared() {
+		_spec.ClearField(instance.FieldNetbirdConfig, field.TypeString)
+	}
+	if value, ok := _u.mutation.LastActivityAt(); ok {
+		_spec.SetField(instance.FieldLastActivityAt, field.TypeTime, value)
+	}
+	if _u.mutation.LastActivityAtCleared() {
+		_spec.ClearField(instance.FieldLastActivityAt, field.TypeTime)
 	}
 	if value, ok := _u.mutation.UpdatedAt(); ok {
 		_spec.SetField(instance.FieldUpdatedAt, field.TypeTime, value)
@@ -423,6 +475,46 @@ func (_u *InstanceUpdateOne) ClearVolumeID() *InstanceUpdateOne {
 	return _u
 }
 
+// SetNetbirdConfig sets the "netbird_config" field.
+func (_u *InstanceUpdateOne) SetNetbirdConfig(v string) *InstanceUpdateOne {
+	_u.mutation.SetNetbirdConfig(v)
+	return _u
+}
+
+// SetNillableNetbirdConfig sets the "netbird_config" field if the given value is not nil.
+func (_u *InstanceUpdateOne) SetNillableNetbirdConfig(v *string) *InstanceUpdateOne {
+	if v != nil {
+		_u.SetNetbirdConfig(*v)
+	}
+	return _u
+}
+
+// ClearNetbirdConfig clears the value of the "netbird_config" field.
+func (_u *InstanceUpdateOne) ClearNetbirdConfig() *InstanceUpdateOne {
+	_u.mutation.ClearNetbirdConfig()
+	return _u
+}
+
+// SetLastActivityAt sets the "last_activity_at" field.
+func (_u *InstanceUpdateOne) SetLastActivityAt(v time.Time) *InstanceUpdateOne {
+	_u.mutation.SetLastActivityAt(v)
+	return _u
+}
+
+// SetNillableLastActivityAt sets the "last_activity_at" field if the given value is not nil.
+func (_u *InstanceUpdateOne) SetNillableLastActivityAt(v *time.Time) *InstanceUpdateOne {
+	if v != nil {
+		_u.SetLastActivityAt(*v)
+	}
+	return _u
+}
+
+// ClearLastActivityAt clears the value of the "last_activity_at" field.
+func (_u *InstanceUpdateOne) ClearLastActivityAt() *InstanceUpdateOne {
+	_u.mutation.ClearLastActivityAt()
+	return _u
+}
+
 // SetUpdatedAt sets the "updated_at" field.
 func (_u *InstanceUpdateOne) SetUpdatedAt(v time.Time) *InstanceUpdateOne {
 	_u.mutation.SetUpdatedAt(v)
@@ -576,6 +668,18 @@ func (_u *InstanceUpdateOne) sqlSave(ctx context.Context) (_node *Instance, err 
 	}
 	if _u.mutation.VolumeIDCleared() {
 		_spec.ClearField(instance.FieldVolumeID, field.TypeString)
+	}
+	if value, ok := _u.mutation.NetbirdConfig(); ok {
+		_spec.SetField(instance.FieldNetbirdConfig, field.TypeString, value)
+	}
+	if _u.mutation.NetbirdConfigCleared() {
+		_spec.ClearField(instance.FieldNetbirdConfig, field.TypeString)
+	}
+	if value, ok := _u.mutation.LastActivityAt(); ok {
+		_spec.SetField(instance.FieldLastActivityAt, field.TypeTime, value)
+	}
+	if _u.mutation.LastActivityAtCleared() {
+		_spec.ClearField(instance.FieldLastActivityAt, field.TypeTime)
 	}
 	if value, ok := _u.mutation.UpdatedAt(); ok {
 		_spec.SetField(instance.FieldUpdatedAt, field.TypeTime, value)

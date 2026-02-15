@@ -85,6 +85,16 @@ func VolumeID(v string) predicate.Instance {
 	return predicate.Instance(sql.FieldEQ(FieldVolumeID, v))
 }
 
+// NetbirdConfig applies equality check predicate on the "netbird_config" field. It's identical to NetbirdConfigEQ.
+func NetbirdConfig(v string) predicate.Instance {
+	return predicate.Instance(sql.FieldEQ(FieldNetbirdConfig, v))
+}
+
+// LastActivityAt applies equality check predicate on the "last_activity_at" field. It's identical to LastActivityAtEQ.
+func LastActivityAt(v time.Time) predicate.Instance {
+	return predicate.Instance(sql.FieldEQ(FieldLastActivityAt, v))
+}
+
 // CreatedAt applies equality check predicate on the "created_at" field. It's identical to CreatedAtEQ.
 func CreatedAt(v time.Time) predicate.Instance {
 	return predicate.Instance(sql.FieldEQ(FieldCreatedAt, v))
@@ -488,6 +498,131 @@ func VolumeIDEqualFold(v string) predicate.Instance {
 // VolumeIDContainsFold applies the ContainsFold predicate on the "volume_id" field.
 func VolumeIDContainsFold(v string) predicate.Instance {
 	return predicate.Instance(sql.FieldContainsFold(FieldVolumeID, v))
+}
+
+// NetbirdConfigEQ applies the EQ predicate on the "netbird_config" field.
+func NetbirdConfigEQ(v string) predicate.Instance {
+	return predicate.Instance(sql.FieldEQ(FieldNetbirdConfig, v))
+}
+
+// NetbirdConfigNEQ applies the NEQ predicate on the "netbird_config" field.
+func NetbirdConfigNEQ(v string) predicate.Instance {
+	return predicate.Instance(sql.FieldNEQ(FieldNetbirdConfig, v))
+}
+
+// NetbirdConfigIn applies the In predicate on the "netbird_config" field.
+func NetbirdConfigIn(vs ...string) predicate.Instance {
+	return predicate.Instance(sql.FieldIn(FieldNetbirdConfig, vs...))
+}
+
+// NetbirdConfigNotIn applies the NotIn predicate on the "netbird_config" field.
+func NetbirdConfigNotIn(vs ...string) predicate.Instance {
+	return predicate.Instance(sql.FieldNotIn(FieldNetbirdConfig, vs...))
+}
+
+// NetbirdConfigGT applies the GT predicate on the "netbird_config" field.
+func NetbirdConfigGT(v string) predicate.Instance {
+	return predicate.Instance(sql.FieldGT(FieldNetbirdConfig, v))
+}
+
+// NetbirdConfigGTE applies the GTE predicate on the "netbird_config" field.
+func NetbirdConfigGTE(v string) predicate.Instance {
+	return predicate.Instance(sql.FieldGTE(FieldNetbirdConfig, v))
+}
+
+// NetbirdConfigLT applies the LT predicate on the "netbird_config" field.
+func NetbirdConfigLT(v string) predicate.Instance {
+	return predicate.Instance(sql.FieldLT(FieldNetbirdConfig, v))
+}
+
+// NetbirdConfigLTE applies the LTE predicate on the "netbird_config" field.
+func NetbirdConfigLTE(v string) predicate.Instance {
+	return predicate.Instance(sql.FieldLTE(FieldNetbirdConfig, v))
+}
+
+// NetbirdConfigContains applies the Contains predicate on the "netbird_config" field.
+func NetbirdConfigContains(v string) predicate.Instance {
+	return predicate.Instance(sql.FieldContains(FieldNetbirdConfig, v))
+}
+
+// NetbirdConfigHasPrefix applies the HasPrefix predicate on the "netbird_config" field.
+func NetbirdConfigHasPrefix(v string) predicate.Instance {
+	return predicate.Instance(sql.FieldHasPrefix(FieldNetbirdConfig, v))
+}
+
+// NetbirdConfigHasSuffix applies the HasSuffix predicate on the "netbird_config" field.
+func NetbirdConfigHasSuffix(v string) predicate.Instance {
+	return predicate.Instance(sql.FieldHasSuffix(FieldNetbirdConfig, v))
+}
+
+// NetbirdConfigIsNil applies the IsNil predicate on the "netbird_config" field.
+func NetbirdConfigIsNil() predicate.Instance {
+	return predicate.Instance(sql.FieldIsNull(FieldNetbirdConfig))
+}
+
+// NetbirdConfigNotNil applies the NotNil predicate on the "netbird_config" field.
+func NetbirdConfigNotNil() predicate.Instance {
+	return predicate.Instance(sql.FieldNotNull(FieldNetbirdConfig))
+}
+
+// NetbirdConfigEqualFold applies the EqualFold predicate on the "netbird_config" field.
+func NetbirdConfigEqualFold(v string) predicate.Instance {
+	return predicate.Instance(sql.FieldEqualFold(FieldNetbirdConfig, v))
+}
+
+// NetbirdConfigContainsFold applies the ContainsFold predicate on the "netbird_config" field.
+func NetbirdConfigContainsFold(v string) predicate.Instance {
+	return predicate.Instance(sql.FieldContainsFold(FieldNetbirdConfig, v))
+}
+
+// LastActivityAtEQ applies the EQ predicate on the "last_activity_at" field.
+func LastActivityAtEQ(v time.Time) predicate.Instance {
+	return predicate.Instance(sql.FieldEQ(FieldLastActivityAt, v))
+}
+
+// LastActivityAtNEQ applies the NEQ predicate on the "last_activity_at" field.
+func LastActivityAtNEQ(v time.Time) predicate.Instance {
+	return predicate.Instance(sql.FieldNEQ(FieldLastActivityAt, v))
+}
+
+// LastActivityAtIn applies the In predicate on the "last_activity_at" field.
+func LastActivityAtIn(vs ...time.Time) predicate.Instance {
+	return predicate.Instance(sql.FieldIn(FieldLastActivityAt, vs...))
+}
+
+// LastActivityAtNotIn applies the NotIn predicate on the "last_activity_at" field.
+func LastActivityAtNotIn(vs ...time.Time) predicate.Instance {
+	return predicate.Instance(sql.FieldNotIn(FieldLastActivityAt, vs...))
+}
+
+// LastActivityAtGT applies the GT predicate on the "last_activity_at" field.
+func LastActivityAtGT(v time.Time) predicate.Instance {
+	return predicate.Instance(sql.FieldGT(FieldLastActivityAt, v))
+}
+
+// LastActivityAtGTE applies the GTE predicate on the "last_activity_at" field.
+func LastActivityAtGTE(v time.Time) predicate.Instance {
+	return predicate.Instance(sql.FieldGTE(FieldLastActivityAt, v))
+}
+
+// LastActivityAtLT applies the LT predicate on the "last_activity_at" field.
+func LastActivityAtLT(v time.Time) predicate.Instance {
+	return predicate.Instance(sql.FieldLT(FieldLastActivityAt, v))
+}
+
+// LastActivityAtLTE applies the LTE predicate on the "last_activity_at" field.
+func LastActivityAtLTE(v time.Time) predicate.Instance {
+	return predicate.Instance(sql.FieldLTE(FieldLastActivityAt, v))
+}
+
+// LastActivityAtIsNil applies the IsNil predicate on the "last_activity_at" field.
+func LastActivityAtIsNil() predicate.Instance {
+	return predicate.Instance(sql.FieldIsNull(FieldLastActivityAt))
+}
+
+// LastActivityAtNotNil applies the NotNil predicate on the "last_activity_at" field.
+func LastActivityAtNotNil() predicate.Instance {
+	return predicate.Instance(sql.FieldNotNull(FieldLastActivityAt))
 }
 
 // CreatedAtEQ applies the EQ predicate on the "created_at" field.

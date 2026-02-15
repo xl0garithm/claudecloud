@@ -26,6 +26,10 @@ const (
 	FieldStatus = "status"
 	// FieldVolumeID holds the string denoting the volume_id field in the database.
 	FieldVolumeID = "volume_id"
+	// FieldNetbirdConfig holds the string denoting the netbird_config field in the database.
+	FieldNetbirdConfig = "netbird_config"
+	// FieldLastActivityAt holds the string denoting the last_activity_at field in the database.
+	FieldLastActivityAt = "last_activity_at"
 	// FieldCreatedAt holds the string denoting the created_at field in the database.
 	FieldCreatedAt = "created_at"
 	// FieldUpdatedAt holds the string denoting the updated_at field in the database.
@@ -52,6 +56,8 @@ var Columns = []string{
 	FieldPort,
 	FieldStatus,
 	FieldVolumeID,
+	FieldNetbirdConfig,
+	FieldLastActivityAt,
 	FieldCreatedAt,
 	FieldUpdatedAt,
 }
@@ -128,6 +134,16 @@ func ByStatus(opts ...sql.OrderTermOption) OrderOption {
 // ByVolumeID orders the results by the volume_id field.
 func ByVolumeID(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldVolumeID, opts...).ToFunc()
+}
+
+// ByNetbirdConfig orders the results by the netbird_config field.
+func ByNetbirdConfig(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldNetbirdConfig, opts...).ToFunc()
+}
+
+// ByLastActivityAt orders the results by the last_activity_at field.
+func ByLastActivityAt(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldLastActivityAt, opts...).ToFunc()
 }
 
 // ByCreatedAt orders the results by the created_at field.

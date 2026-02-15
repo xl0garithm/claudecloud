@@ -36,6 +36,13 @@ variable "image" {
   description = "Server OS image"
 }
 
+variable "netbird_setup_key" {
+  type        = string
+  default     = ""
+  sensitive   = true
+  description = "Netbird setup key for zero-trust enrollment (empty = skip)"
+}
+
 provider "hcloud" {
   token = var.hcloud_token
 }
@@ -66,7 +73,8 @@ resource "hcloud_server" "instance" {
   location    = var.location
 
   user_data = templatefile("${path.module}/cloud-init.yaml.tpl", {
-    user_id = var.user_id
+    user_id           = var.user_id
+    netbird_setup_key = var.netbird_setup_key
   })
 
   labels = {

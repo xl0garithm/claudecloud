@@ -32,24 +32,26 @@ const (
 // InstanceMutation represents an operation that mutates the Instance nodes in the graph.
 type InstanceMutation struct {
 	config
-	op            Op
-	typ           string
-	id            *int
-	provider      *string
-	provider_id   *string
-	host          *string
-	port          *int
-	addport       *int
-	status        *string
-	volume_id     *string
-	created_at    *time.Time
-	updated_at    *time.Time
-	clearedFields map[string]struct{}
-	owner         *int
-	clearedowner  bool
-	done          bool
-	oldValue      func(context.Context) (*Instance, error)
-	predicates    []predicate.Instance
+	op               Op
+	typ              string
+	id               *int
+	provider         *string
+	provider_id      *string
+	host             *string
+	port             *int
+	addport          *int
+	status           *string
+	volume_id        *string
+	netbird_config   *string
+	last_activity_at *time.Time
+	created_at       *time.Time
+	updated_at       *time.Time
+	clearedFields    map[string]struct{}
+	owner            *int
+	clearedowner     bool
+	done             bool
+	oldValue         func(context.Context) (*Instance, error)
+	predicates       []predicate.Instance
 }
 
 var _ ent.Mutation = (*InstanceMutation)(nil)
@@ -426,6 +428,104 @@ func (m *InstanceMutation) ResetVolumeID() {
 	delete(m.clearedFields, instance.FieldVolumeID)
 }
 
+// SetNetbirdConfig sets the "netbird_config" field.
+func (m *InstanceMutation) SetNetbirdConfig(s string) {
+	m.netbird_config = &s
+}
+
+// NetbirdConfig returns the value of the "netbird_config" field in the mutation.
+func (m *InstanceMutation) NetbirdConfig() (r string, exists bool) {
+	v := m.netbird_config
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldNetbirdConfig returns the old "netbird_config" field's value of the Instance entity.
+// If the Instance object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *InstanceMutation) OldNetbirdConfig(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldNetbirdConfig is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldNetbirdConfig requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldNetbirdConfig: %w", err)
+	}
+	return oldValue.NetbirdConfig, nil
+}
+
+// ClearNetbirdConfig clears the value of the "netbird_config" field.
+func (m *InstanceMutation) ClearNetbirdConfig() {
+	m.netbird_config = nil
+	m.clearedFields[instance.FieldNetbirdConfig] = struct{}{}
+}
+
+// NetbirdConfigCleared returns if the "netbird_config" field was cleared in this mutation.
+func (m *InstanceMutation) NetbirdConfigCleared() bool {
+	_, ok := m.clearedFields[instance.FieldNetbirdConfig]
+	return ok
+}
+
+// ResetNetbirdConfig resets all changes to the "netbird_config" field.
+func (m *InstanceMutation) ResetNetbirdConfig() {
+	m.netbird_config = nil
+	delete(m.clearedFields, instance.FieldNetbirdConfig)
+}
+
+// SetLastActivityAt sets the "last_activity_at" field.
+func (m *InstanceMutation) SetLastActivityAt(t time.Time) {
+	m.last_activity_at = &t
+}
+
+// LastActivityAt returns the value of the "last_activity_at" field in the mutation.
+func (m *InstanceMutation) LastActivityAt() (r time.Time, exists bool) {
+	v := m.last_activity_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldLastActivityAt returns the old "last_activity_at" field's value of the Instance entity.
+// If the Instance object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *InstanceMutation) OldLastActivityAt(ctx context.Context) (v *time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldLastActivityAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldLastActivityAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldLastActivityAt: %w", err)
+	}
+	return oldValue.LastActivityAt, nil
+}
+
+// ClearLastActivityAt clears the value of the "last_activity_at" field.
+func (m *InstanceMutation) ClearLastActivityAt() {
+	m.last_activity_at = nil
+	m.clearedFields[instance.FieldLastActivityAt] = struct{}{}
+}
+
+// LastActivityAtCleared returns if the "last_activity_at" field was cleared in this mutation.
+func (m *InstanceMutation) LastActivityAtCleared() bool {
+	_, ok := m.clearedFields[instance.FieldLastActivityAt]
+	return ok
+}
+
+// ResetLastActivityAt resets all changes to the "last_activity_at" field.
+func (m *InstanceMutation) ResetLastActivityAt() {
+	m.last_activity_at = nil
+	delete(m.clearedFields, instance.FieldLastActivityAt)
+}
+
 // SetCreatedAt sets the "created_at" field.
 func (m *InstanceMutation) SetCreatedAt(t time.Time) {
 	m.created_at = &t
@@ -571,7 +671,7 @@ func (m *InstanceMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *InstanceMutation) Fields() []string {
-	fields := make([]string, 0, 8)
+	fields := make([]string, 0, 10)
 	if m.provider != nil {
 		fields = append(fields, instance.FieldProvider)
 	}
@@ -589,6 +689,12 @@ func (m *InstanceMutation) Fields() []string {
 	}
 	if m.volume_id != nil {
 		fields = append(fields, instance.FieldVolumeID)
+	}
+	if m.netbird_config != nil {
+		fields = append(fields, instance.FieldNetbirdConfig)
+	}
+	if m.last_activity_at != nil {
+		fields = append(fields, instance.FieldLastActivityAt)
 	}
 	if m.created_at != nil {
 		fields = append(fields, instance.FieldCreatedAt)
@@ -616,6 +722,10 @@ func (m *InstanceMutation) Field(name string) (ent.Value, bool) {
 		return m.Status()
 	case instance.FieldVolumeID:
 		return m.VolumeID()
+	case instance.FieldNetbirdConfig:
+		return m.NetbirdConfig()
+	case instance.FieldLastActivityAt:
+		return m.LastActivityAt()
 	case instance.FieldCreatedAt:
 		return m.CreatedAt()
 	case instance.FieldUpdatedAt:
@@ -641,6 +751,10 @@ func (m *InstanceMutation) OldField(ctx context.Context, name string) (ent.Value
 		return m.OldStatus(ctx)
 	case instance.FieldVolumeID:
 		return m.OldVolumeID(ctx)
+	case instance.FieldNetbirdConfig:
+		return m.OldNetbirdConfig(ctx)
+	case instance.FieldLastActivityAt:
+		return m.OldLastActivityAt(ctx)
 	case instance.FieldCreatedAt:
 		return m.OldCreatedAt(ctx)
 	case instance.FieldUpdatedAt:
@@ -695,6 +809,20 @@ func (m *InstanceMutation) SetField(name string, value ent.Value) error {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
 		m.SetVolumeID(v)
+		return nil
+	case instance.FieldNetbirdConfig:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetNetbirdConfig(v)
+		return nil
+	case instance.FieldLastActivityAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetLastActivityAt(v)
 		return nil
 	case instance.FieldCreatedAt:
 		v, ok := value.(time.Time)
@@ -764,6 +892,12 @@ func (m *InstanceMutation) ClearedFields() []string {
 	if m.FieldCleared(instance.FieldVolumeID) {
 		fields = append(fields, instance.FieldVolumeID)
 	}
+	if m.FieldCleared(instance.FieldNetbirdConfig) {
+		fields = append(fields, instance.FieldNetbirdConfig)
+	}
+	if m.FieldCleared(instance.FieldLastActivityAt) {
+		fields = append(fields, instance.FieldLastActivityAt)
+	}
 	return fields
 }
 
@@ -786,6 +920,12 @@ func (m *InstanceMutation) ClearField(name string) error {
 		return nil
 	case instance.FieldVolumeID:
 		m.ClearVolumeID()
+		return nil
+	case instance.FieldNetbirdConfig:
+		m.ClearNetbirdConfig()
+		return nil
+	case instance.FieldLastActivityAt:
+		m.ClearLastActivityAt()
 		return nil
 	}
 	return fmt.Errorf("unknown Instance nullable field %s", name)
@@ -812,6 +952,12 @@ func (m *InstanceMutation) ResetField(name string) error {
 		return nil
 	case instance.FieldVolumeID:
 		m.ResetVolumeID()
+		return nil
+	case instance.FieldNetbirdConfig:
+		m.ResetNetbirdConfig()
+		return nil
+	case instance.FieldLastActivityAt:
+		m.ResetLastActivityAt()
 		return nil
 	case instance.FieldCreatedAt:
 		m.ResetCreatedAt()

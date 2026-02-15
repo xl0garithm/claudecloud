@@ -89,6 +89,34 @@ func (_c *InstanceCreate) SetNillableVolumeID(v *string) *InstanceCreate {
 	return _c
 }
 
+// SetNetbirdConfig sets the "netbird_config" field.
+func (_c *InstanceCreate) SetNetbirdConfig(v string) *InstanceCreate {
+	_c.mutation.SetNetbirdConfig(v)
+	return _c
+}
+
+// SetNillableNetbirdConfig sets the "netbird_config" field if the given value is not nil.
+func (_c *InstanceCreate) SetNillableNetbirdConfig(v *string) *InstanceCreate {
+	if v != nil {
+		_c.SetNetbirdConfig(*v)
+	}
+	return _c
+}
+
+// SetLastActivityAt sets the "last_activity_at" field.
+func (_c *InstanceCreate) SetLastActivityAt(v time.Time) *InstanceCreate {
+	_c.mutation.SetLastActivityAt(v)
+	return _c
+}
+
+// SetNillableLastActivityAt sets the "last_activity_at" field if the given value is not nil.
+func (_c *InstanceCreate) SetNillableLastActivityAt(v *time.Time) *InstanceCreate {
+	if v != nil {
+		_c.SetLastActivityAt(*v)
+	}
+	return _c
+}
+
 // SetCreatedAt sets the "created_at" field.
 func (_c *InstanceCreate) SetCreatedAt(v time.Time) *InstanceCreate {
 	_c.mutation.SetCreatedAt(v)
@@ -256,6 +284,14 @@ func (_c *InstanceCreate) createSpec() (*Instance, *sqlgraph.CreateSpec) {
 	if value, ok := _c.mutation.VolumeID(); ok {
 		_spec.SetField(instance.FieldVolumeID, field.TypeString, value)
 		_node.VolumeID = value
+	}
+	if value, ok := _c.mutation.NetbirdConfig(); ok {
+		_spec.SetField(instance.FieldNetbirdConfig, field.TypeString, value)
+		_node.NetbirdConfig = value
+	}
+	if value, ok := _c.mutation.LastActivityAt(); ok {
+		_spec.SetField(instance.FieldLastActivityAt, field.TypeTime, value)
+		_node.LastActivityAt = &value
 	}
 	if value, ok := _c.mutation.CreatedAt(); ok {
 		_spec.SetField(instance.FieldCreatedAt, field.TypeTime, value)

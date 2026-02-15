@@ -23,9 +23,9 @@ lint: vet
 generate:
 	$(GO) generate ./...
 
-# Docker
+# Docker (repo root context so Dockerfile can COPY scripts/)
 image-build:
-	docker build -t claude-instance -f docker/Dockerfile.instance docker/
+	docker build -t claude-instance -f docker/Dockerfile.instance .
 
 # Dev stack
 dev: image-build

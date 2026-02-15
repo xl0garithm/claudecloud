@@ -49,7 +49,8 @@ func (p *Provider) userDir(userID int) string {
 }
 
 // Create provisions a new Hetzner server for the given user via Terraform.
-func (p *Provider) Create(ctx context.Context, userID int) (*provider.Instance, error) {
+// If opts.NetbirdSetupKey is set, it is passed to cloud-init for Netbird enrollment.
+func (p *Provider) Create(ctx context.Context, userID int, opts provider.CreateOptions) (*provider.Instance, error) {
 	dir := p.userDir(userID)
 
 	if err := os.MkdirAll(dir, 0o755); err != nil {
@@ -61,6 +62,9 @@ func (p *Provider) Create(ctx context.Context, userID int) (*provider.Instance, 
 		"user_id":      userID,
 		"hcloud_token": p.hcloudToken,
 	}
+	if opts.NetbirdSetupKey != "" {
+		vars["netbird_setup_key"] = opts.NetbirdSetupKey
+	}
 	varsJSON, _ := json.MarshalIndent(vars, "", "  ")
 	varsFile := filepath.Join(dir, "terraform.tfvars.json")
 	if err := os.WriteFile(varsFile, varsJSON, 0o600); err != nil {
@@ -70,9 +74,10 @@ func (p *Provider) Create(ctx context.Context, userID int) (*provider.Instance, 
 	// Copy module reference
 	mainTF := fmt.Sprintf(`
 module "instance" {
-  source       = "../../modules/user_instance"
-  user_id      = var.user_id
-  hcloud_token = var.hcloud_token
+  source            = "../../modules/user_instance"
+  user_id           = var.user_id
+  hcloud_token      = var.hcloud_token
+  netbird_setup_key = var.netbird_setup_key
 }
 
 variable "user_id" {
@@ -81,6 +86,12 @@ variable "user_id" {
 
 variable "hcloud_token" {
   type      = string
+  sensitive = true
+}
+
+variable "netbird_setup_key" {
+  type      = string
+  default   = ""
   sensitive = true
 }
 
@@ -213,6 +224,16 @@ func (p *Provider) Pause(ctx context.Context, instanceID string) error {
 	// For Phase 1, Pause == Destroy (snapshot + destroy would need Hetzner API directly)
 	// The volume persists via Terraform lifecycle rules
 	return p.Destroy(ctx, instanceID)
+}
+
+// Activity checks if the Hetzner server is running (basic check for now).
+func (p *Provider) Activity(ctx context.Context, instanceID string) (*provider.ActivityInfo, error) {
+	inst, err := p.Status(ctx, instanceID)
+	if err != nil {
+		return nil, err
+	}
+	isActive := inst.Status == provider.StatusRunning
+	return &provider.ActivityInfo{IsActive: isActive}, nil
 }
 
 // Wake recreates the server from the latest snapshot.

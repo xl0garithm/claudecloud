@@ -11,16 +11,18 @@ import (
 type MockProvisioner struct {
 	mu        sync.Mutex
 	instances map[string]*Instance
+	inactive  map[string]bool // tracks instances marked as inactive for testing
 }
 
 // NewMock creates a new MockProvisioner.
 func NewMock() *MockProvisioner {
 	return &MockProvisioner{
 		instances: make(map[string]*Instance),
+		inactive:  make(map[string]bool),
 	}
 }
 
-func (m *MockProvisioner) Create(ctx context.Context, userID int) (*Instance, error) {
+func (m *MockProvisioner) Create(ctx context.Context, userID int, opts CreateOptions) (*Instance, error) {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 
@@ -97,4 +99,25 @@ func (m *MockProvisioner) Wake(ctx context.Context, instanceID string) error {
 	}
 	inst.Status = StatusRunning
 	return nil
+}
+
+func (m *MockProvisioner) Activity(ctx context.Context, instanceID string) (*ActivityInfo, error) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+
+	_, ok := m.instances[instanceID]
+	if !ok {
+		return nil, ErrNotFound
+	}
+	if m.inactive[instanceID] {
+		return &ActivityInfo{IsActive: false, ProcessCount: 2}, nil
+	}
+	return &ActivityInfo{IsActive: true, ProcessCount: 5}, nil
+}
+
+// SetInactive marks an instance as inactive for testing.
+func (m *MockProvisioner) SetInactive(instanceID string) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	m.inactive[instanceID] = true
 }
