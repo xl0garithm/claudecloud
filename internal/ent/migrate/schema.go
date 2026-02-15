@@ -41,7 +41,13 @@ var (
 	UsersColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeInt, Increment: true},
 		{Name: "email", Type: field.TypeString, Unique: true},
-		{Name: "api_key", Type: field.TypeString, Unique: true},
+		{Name: "api_key", Type: field.TypeString, Unique: true, Nullable: true},
+		{Name: "name", Type: field.TypeString, Nullable: true, Default: ""},
+		{Name: "stripe_customer_id", Type: field.TypeString, Unique: true, Nullable: true},
+		{Name: "stripe_subscription_id", Type: field.TypeString, Nullable: true},
+		{Name: "subscription_status", Type: field.TypeString, Default: "inactive"},
+		{Name: "plan", Type: field.TypeString, Default: "free"},
+		{Name: "usage_hours", Type: field.TypeFloat64, Default: 0},
 		{Name: "created_at", Type: field.TypeTime},
 		{Name: "updated_at", Type: field.TypeTime},
 	}

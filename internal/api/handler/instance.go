@@ -7,6 +7,7 @@ import (
 
 	"github.com/go-chi/chi/v5"
 
+	"github.com/logan/cloudcode/internal/api/middleware"
 	"github.com/logan/cloudcode/internal/api/response"
 	"github.com/logan/cloudcode/internal/provider"
 	"github.com/logan/cloudcode/internal/service"
@@ -33,12 +34,23 @@ func (h *InstanceHandler) Create(w http.ResponseWriter, r *http.Request) {
 		response.Error(w, http.StatusBadRequest, "invalid request body")
 		return
 	}
-	if req.UserID <= 0 {
-		response.Error(w, http.StatusBadRequest, "user_id is required")
-		return
+
+	// Determine user ID: JWT-authed users use their own ID, admin can specify user_id
+	userID := middleware.UserIDFromContext(r.Context())
+	if userID == 0 {
+		// Admin mode — use request body
+		if !middleware.IsAdminContext(r.Context()) {
+			response.Error(w, http.StatusUnauthorized, "authentication required")
+			return
+		}
+		if req.UserID <= 0 {
+			response.Error(w, http.StatusBadRequest, "user_id is required")
+			return
+		}
+		userID = req.UserID
 	}
 
-	inst, err := h.svc.Create(r.Context(), req.UserID)
+	inst, err := h.svc.Create(r.Context(), userID)
 	if err != nil {
 		handleServiceError(w, err)
 		return

@@ -45,14 +45,14 @@ func main() {
 	logger.Printf("provider: %s", cfg.Provider)
 
 	// Service layer
-	svc := service.NewInstanceService(db, prov)
+	instanceSvc := service.NewInstanceService(db, prov)
 
 	// Netbird (Hetzner only)
 	var cronSvc *service.CronService
 	if cfg.Provider == "hetzner" && cfg.NetbirdAPIToken != "" {
 		nbClient := netbird.New(cfg.NetbirdAPIURL, cfg.NetbirdAPIToken)
 		nbSvc := service.NewNetbirdService(nbClient, logger)
-		svc.SetNetbirdService(nbSvc)
+		instanceSvc.SetNetbirdService(nbSvc)
 		logger.Println("netbird: enabled")
 
 		// Cron for expired key cleanup
@@ -60,6 +60,19 @@ func main() {
 		cronSvc = service.NewCronService(nbSvc, logger, cronInterval)
 		cronSvc.Start()
 	}
+
+	// Mailer
+	var mailer service.Mailer
+	if cfg.SMTPHost != "" {
+		mailer = service.NewSMTPMailer(cfg.SMTPHost, cfg.SMTPPort, cfg.SMTPUsername, cfg.SMTPPassword, cfg.SMTPFrom)
+		logger.Println("mailer: smtp")
+	} else {
+		mailer = service.NewLogMailer(logger)
+		logger.Println("mailer: log (dev mode)")
+	}
+
+	// Auth service
+	authSvc := service.NewAuthService(db, cfg.JWTSecret, cfg.BaseURL, cfg.FrontendURL, mailer)
 
 	// Activity service
 	activityInterval, err := time.ParseDuration(cfg.ActivityCheckInterval)
@@ -74,7 +87,11 @@ func main() {
 	actSvc.Start()
 
 	// Router
-	router := api.NewRouter(cfg, svc)
+	svcs := &api.Services{
+		Instance: instanceSvc,
+		Auth:     authSvc,
+	}
+	router := api.NewRouter(cfg, svcs)
 
 	// HTTP Server
 	srv := &http.Server{

@@ -65,6 +65,36 @@ func APIKey(v string) predicate.User {
 	return predicate.User(sql.FieldEQ(FieldAPIKey, v))
 }
 
+// Name applies equality check predicate on the "name" field. It's identical to NameEQ.
+func Name(v string) predicate.User {
+	return predicate.User(sql.FieldEQ(FieldName, v))
+}
+
+// StripeCustomerID applies equality check predicate on the "stripe_customer_id" field. It's identical to StripeCustomerIDEQ.
+func StripeCustomerID(v string) predicate.User {
+	return predicate.User(sql.FieldEQ(FieldStripeCustomerID, v))
+}
+
+// StripeSubscriptionID applies equality check predicate on the "stripe_subscription_id" field. It's identical to StripeSubscriptionIDEQ.
+func StripeSubscriptionID(v string) predicate.User {
+	return predicate.User(sql.FieldEQ(FieldStripeSubscriptionID, v))
+}
+
+// SubscriptionStatus applies equality check predicate on the "subscription_status" field. It's identical to SubscriptionStatusEQ.
+func SubscriptionStatus(v string) predicate.User {
+	return predicate.User(sql.FieldEQ(FieldSubscriptionStatus, v))
+}
+
+// Plan applies equality check predicate on the "plan" field. It's identical to PlanEQ.
+func Plan(v string) predicate.User {
+	return predicate.User(sql.FieldEQ(FieldPlan, v))
+}
+
+// UsageHours applies equality check predicate on the "usage_hours" field. It's identical to UsageHoursEQ.
+func UsageHours(v float64) predicate.User {
+	return predicate.User(sql.FieldEQ(FieldUsageHours, v))
+}
+
 // CreatedAt applies equality check predicate on the "created_at" field. It's identical to CreatedAtEQ.
 func CreatedAt(v time.Time) predicate.User {
 	return predicate.User(sql.FieldEQ(FieldCreatedAt, v))
@@ -195,6 +225,16 @@ func APIKeyHasSuffix(v string) predicate.User {
 	return predicate.User(sql.FieldHasSuffix(FieldAPIKey, v))
 }
 
+// APIKeyIsNil applies the IsNil predicate on the "api_key" field.
+func APIKeyIsNil() predicate.User {
+	return predicate.User(sql.FieldIsNull(FieldAPIKey))
+}
+
+// APIKeyNotNil applies the NotNil predicate on the "api_key" field.
+func APIKeyNotNil() predicate.User {
+	return predicate.User(sql.FieldNotNull(FieldAPIKey))
+}
+
 // APIKeyEqualFold applies the EqualFold predicate on the "api_key" field.
 func APIKeyEqualFold(v string) predicate.User {
 	return predicate.User(sql.FieldEqualFold(FieldAPIKey, v))
@@ -203,6 +243,401 @@ func APIKeyEqualFold(v string) predicate.User {
 // APIKeyContainsFold applies the ContainsFold predicate on the "api_key" field.
 func APIKeyContainsFold(v string) predicate.User {
 	return predicate.User(sql.FieldContainsFold(FieldAPIKey, v))
+}
+
+// NameEQ applies the EQ predicate on the "name" field.
+func NameEQ(v string) predicate.User {
+	return predicate.User(sql.FieldEQ(FieldName, v))
+}
+
+// NameNEQ applies the NEQ predicate on the "name" field.
+func NameNEQ(v string) predicate.User {
+	return predicate.User(sql.FieldNEQ(FieldName, v))
+}
+
+// NameIn applies the In predicate on the "name" field.
+func NameIn(vs ...string) predicate.User {
+	return predicate.User(sql.FieldIn(FieldName, vs...))
+}
+
+// NameNotIn applies the NotIn predicate on the "name" field.
+func NameNotIn(vs ...string) predicate.User {
+	return predicate.User(sql.FieldNotIn(FieldName, vs...))
+}
+
+// NameGT applies the GT predicate on the "name" field.
+func NameGT(v string) predicate.User {
+	return predicate.User(sql.FieldGT(FieldName, v))
+}
+
+// NameGTE applies the GTE predicate on the "name" field.
+func NameGTE(v string) predicate.User {
+	return predicate.User(sql.FieldGTE(FieldName, v))
+}
+
+// NameLT applies the LT predicate on the "name" field.
+func NameLT(v string) predicate.User {
+	return predicate.User(sql.FieldLT(FieldName, v))
+}
+
+// NameLTE applies the LTE predicate on the "name" field.
+func NameLTE(v string) predicate.User {
+	return predicate.User(sql.FieldLTE(FieldName, v))
+}
+
+// NameContains applies the Contains predicate on the "name" field.
+func NameContains(v string) predicate.User {
+	return predicate.User(sql.FieldContains(FieldName, v))
+}
+
+// NameHasPrefix applies the HasPrefix predicate on the "name" field.
+func NameHasPrefix(v string) predicate.User {
+	return predicate.User(sql.FieldHasPrefix(FieldName, v))
+}
+
+// NameHasSuffix applies the HasSuffix predicate on the "name" field.
+func NameHasSuffix(v string) predicate.User {
+	return predicate.User(sql.FieldHasSuffix(FieldName, v))
+}
+
+// NameIsNil applies the IsNil predicate on the "name" field.
+func NameIsNil() predicate.User {
+	return predicate.User(sql.FieldIsNull(FieldName))
+}
+
+// NameNotNil applies the NotNil predicate on the "name" field.
+func NameNotNil() predicate.User {
+	return predicate.User(sql.FieldNotNull(FieldName))
+}
+
+// NameEqualFold applies the EqualFold predicate on the "name" field.
+func NameEqualFold(v string) predicate.User {
+	return predicate.User(sql.FieldEqualFold(FieldName, v))
+}
+
+// NameContainsFold applies the ContainsFold predicate on the "name" field.
+func NameContainsFold(v string) predicate.User {
+	return predicate.User(sql.FieldContainsFold(FieldName, v))
+}
+
+// StripeCustomerIDEQ applies the EQ predicate on the "stripe_customer_id" field.
+func StripeCustomerIDEQ(v string) predicate.User {
+	return predicate.User(sql.FieldEQ(FieldStripeCustomerID, v))
+}
+
+// StripeCustomerIDNEQ applies the NEQ predicate on the "stripe_customer_id" field.
+func StripeCustomerIDNEQ(v string) predicate.User {
+	return predicate.User(sql.FieldNEQ(FieldStripeCustomerID, v))
+}
+
+// StripeCustomerIDIn applies the In predicate on the "stripe_customer_id" field.
+func StripeCustomerIDIn(vs ...string) predicate.User {
+	return predicate.User(sql.FieldIn(FieldStripeCustomerID, vs...))
+}
+
+// StripeCustomerIDNotIn applies the NotIn predicate on the "stripe_customer_id" field.
+func StripeCustomerIDNotIn(vs ...string) predicate.User {
+	return predicate.User(sql.FieldNotIn(FieldStripeCustomerID, vs...))
+}
+
+// StripeCustomerIDGT applies the GT predicate on the "stripe_customer_id" field.
+func StripeCustomerIDGT(v string) predicate.User {
+	return predicate.User(sql.FieldGT(FieldStripeCustomerID, v))
+}
+
+// StripeCustomerIDGTE applies the GTE predicate on the "stripe_customer_id" field.
+func StripeCustomerIDGTE(v string) predicate.User {
+	return predicate.User(sql.FieldGTE(FieldStripeCustomerID, v))
+}
+
+// StripeCustomerIDLT applies the LT predicate on the "stripe_customer_id" field.
+func StripeCustomerIDLT(v string) predicate.User {
+	return predicate.User(sql.FieldLT(FieldStripeCustomerID, v))
+}
+
+// StripeCustomerIDLTE applies the LTE predicate on the "stripe_customer_id" field.
+func StripeCustomerIDLTE(v string) predicate.User {
+	return predicate.User(sql.FieldLTE(FieldStripeCustomerID, v))
+}
+
+// StripeCustomerIDContains applies the Contains predicate on the "stripe_customer_id" field.
+func StripeCustomerIDContains(v string) predicate.User {
+	return predicate.User(sql.FieldContains(FieldStripeCustomerID, v))
+}
+
+// StripeCustomerIDHasPrefix applies the HasPrefix predicate on the "stripe_customer_id" field.
+func StripeCustomerIDHasPrefix(v string) predicate.User {
+	return predicate.User(sql.FieldHasPrefix(FieldStripeCustomerID, v))
+}
+
+// StripeCustomerIDHasSuffix applies the HasSuffix predicate on the "stripe_customer_id" field.
+func StripeCustomerIDHasSuffix(v string) predicate.User {
+	return predicate.User(sql.FieldHasSuffix(FieldStripeCustomerID, v))
+}
+
+// StripeCustomerIDIsNil applies the IsNil predicate on the "stripe_customer_id" field.
+func StripeCustomerIDIsNil() predicate.User {
+	return predicate.User(sql.FieldIsNull(FieldStripeCustomerID))
+}
+
+// StripeCustomerIDNotNil applies the NotNil predicate on the "stripe_customer_id" field.
+func StripeCustomerIDNotNil() predicate.User {
+	return predicate.User(sql.FieldNotNull(FieldStripeCustomerID))
+}
+
+// StripeCustomerIDEqualFold applies the EqualFold predicate on the "stripe_customer_id" field.
+func StripeCustomerIDEqualFold(v string) predicate.User {
+	return predicate.User(sql.FieldEqualFold(FieldStripeCustomerID, v))
+}
+
+// StripeCustomerIDContainsFold applies the ContainsFold predicate on the "stripe_customer_id" field.
+func StripeCustomerIDContainsFold(v string) predicate.User {
+	return predicate.User(sql.FieldContainsFold(FieldStripeCustomerID, v))
+}
+
+// StripeSubscriptionIDEQ applies the EQ predicate on the "stripe_subscription_id" field.
+func StripeSubscriptionIDEQ(v string) predicate.User {
+	return predicate.User(sql.FieldEQ(FieldStripeSubscriptionID, v))
+}
+
+// StripeSubscriptionIDNEQ applies the NEQ predicate on the "stripe_subscription_id" field.
+func StripeSubscriptionIDNEQ(v string) predicate.User {
+	return predicate.User(sql.FieldNEQ(FieldStripeSubscriptionID, v))
+}
+
+// StripeSubscriptionIDIn applies the In predicate on the "stripe_subscription_id" field.
+func StripeSubscriptionIDIn(vs ...string) predicate.User {
+	return predicate.User(sql.FieldIn(FieldStripeSubscriptionID, vs...))
+}
+
+// StripeSubscriptionIDNotIn applies the NotIn predicate on the "stripe_subscription_id" field.
+func StripeSubscriptionIDNotIn(vs ...string) predicate.User {
+	return predicate.User(sql.FieldNotIn(FieldStripeSubscriptionID, vs...))
+}
+
+// StripeSubscriptionIDGT applies the GT predicate on the "stripe_subscription_id" field.
+func StripeSubscriptionIDGT(v string) predicate.User {
+	return predicate.User(sql.FieldGT(FieldStripeSubscriptionID, v))
+}
+
+// StripeSubscriptionIDGTE applies the GTE predicate on the "stripe_subscription_id" field.
+func StripeSubscriptionIDGTE(v string) predicate.User {
+	return predicate.User(sql.FieldGTE(FieldStripeSubscriptionID, v))
+}
+
+// StripeSubscriptionIDLT applies the LT predicate on the "stripe_subscription_id" field.
+func StripeSubscriptionIDLT(v string) predicate.User {
+	return predicate.User(sql.FieldLT(FieldStripeSubscriptionID, v))
+}
+
+// StripeSubscriptionIDLTE applies the LTE predicate on the "stripe_subscription_id" field.
+func StripeSubscriptionIDLTE(v string) predicate.User {
+	return predicate.User(sql.FieldLTE(FieldStripeSubscriptionID, v))
+}
+
+// StripeSubscriptionIDContains applies the Contains predicate on the "stripe_subscription_id" field.
+func StripeSubscriptionIDContains(v string) predicate.User {
+	return predicate.User(sql.FieldContains(FieldStripeSubscriptionID, v))
+}
+
+// StripeSubscriptionIDHasPrefix applies the HasPrefix predicate on the "stripe_subscription_id" field.
+func StripeSubscriptionIDHasPrefix(v string) predicate.User {
+	return predicate.User(sql.FieldHasPrefix(FieldStripeSubscriptionID, v))
+}
+
+// StripeSubscriptionIDHasSuffix applies the HasSuffix predicate on the "stripe_subscription_id" field.
+func StripeSubscriptionIDHasSuffix(v string) predicate.User {
+	return predicate.User(sql.FieldHasSuffix(FieldStripeSubscriptionID, v))
+}
+
+// StripeSubscriptionIDIsNil applies the IsNil predicate on the "stripe_subscription_id" field.
+func StripeSubscriptionIDIsNil() predicate.User {
+	return predicate.User(sql.FieldIsNull(FieldStripeSubscriptionID))
+}
+
+// StripeSubscriptionIDNotNil applies the NotNil predicate on the "stripe_subscription_id" field.
+func StripeSubscriptionIDNotNil() predicate.User {
+	return predicate.User(sql.FieldNotNull(FieldStripeSubscriptionID))
+}
+
+// StripeSubscriptionIDEqualFold applies the EqualFold predicate on the "stripe_subscription_id" field.
+func StripeSubscriptionIDEqualFold(v string) predicate.User {
+	return predicate.User(sql.FieldEqualFold(FieldStripeSubscriptionID, v))
+}
+
+// StripeSubscriptionIDContainsFold applies the ContainsFold predicate on the "stripe_subscription_id" field.
+func StripeSubscriptionIDContainsFold(v string) predicate.User {
+	return predicate.User(sql.FieldContainsFold(FieldStripeSubscriptionID, v))
+}
+
+// SubscriptionStatusEQ applies the EQ predicate on the "subscription_status" field.
+func SubscriptionStatusEQ(v string) predicate.User {
+	return predicate.User(sql.FieldEQ(FieldSubscriptionStatus, v))
+}
+
+// SubscriptionStatusNEQ applies the NEQ predicate on the "subscription_status" field.
+func SubscriptionStatusNEQ(v string) predicate.User {
+	return predicate.User(sql.FieldNEQ(FieldSubscriptionStatus, v))
+}
+
+// SubscriptionStatusIn applies the In predicate on the "subscription_status" field.
+func SubscriptionStatusIn(vs ...string) predicate.User {
+	return predicate.User(sql.FieldIn(FieldSubscriptionStatus, vs...))
+}
+
+// SubscriptionStatusNotIn applies the NotIn predicate on the "subscription_status" field.
+func SubscriptionStatusNotIn(vs ...string) predicate.User {
+	return predicate.User(sql.FieldNotIn(FieldSubscriptionStatus, vs...))
+}
+
+// SubscriptionStatusGT applies the GT predicate on the "subscription_status" field.
+func SubscriptionStatusGT(v string) predicate.User {
+	return predicate.User(sql.FieldGT(FieldSubscriptionStatus, v))
+}
+
+// SubscriptionStatusGTE applies the GTE predicate on the "subscription_status" field.
+func SubscriptionStatusGTE(v string) predicate.User {
+	return predicate.User(sql.FieldGTE(FieldSubscriptionStatus, v))
+}
+
+// SubscriptionStatusLT applies the LT predicate on the "subscription_status" field.
+func SubscriptionStatusLT(v string) predicate.User {
+	return predicate.User(sql.FieldLT(FieldSubscriptionStatus, v))
+}
+
+// SubscriptionStatusLTE applies the LTE predicate on the "subscription_status" field.
+func SubscriptionStatusLTE(v string) predicate.User {
+	return predicate.User(sql.FieldLTE(FieldSubscriptionStatus, v))
+}
+
+// SubscriptionStatusContains applies the Contains predicate on the "subscription_status" field.
+func SubscriptionStatusContains(v string) predicate.User {
+	return predicate.User(sql.FieldContains(FieldSubscriptionStatus, v))
+}
+
+// SubscriptionStatusHasPrefix applies the HasPrefix predicate on the "subscription_status" field.
+func SubscriptionStatusHasPrefix(v string) predicate.User {
+	return predicate.User(sql.FieldHasPrefix(FieldSubscriptionStatus, v))
+}
+
+// SubscriptionStatusHasSuffix applies the HasSuffix predicate on the "subscription_status" field.
+func SubscriptionStatusHasSuffix(v string) predicate.User {
+	return predicate.User(sql.FieldHasSuffix(FieldSubscriptionStatus, v))
+}
+
+// SubscriptionStatusEqualFold applies the EqualFold predicate on the "subscription_status" field.
+func SubscriptionStatusEqualFold(v string) predicate.User {
+	return predicate.User(sql.FieldEqualFold(FieldSubscriptionStatus, v))
+}
+
+// SubscriptionStatusContainsFold applies the ContainsFold predicate on the "subscription_status" field.
+func SubscriptionStatusContainsFold(v string) predicate.User {
+	return predicate.User(sql.FieldContainsFold(FieldSubscriptionStatus, v))
+}
+
+// PlanEQ applies the EQ predicate on the "plan" field.
+func PlanEQ(v string) predicate.User {
+	return predicate.User(sql.FieldEQ(FieldPlan, v))
+}
+
+// PlanNEQ applies the NEQ predicate on the "plan" field.
+func PlanNEQ(v string) predicate.User {
+	return predicate.User(sql.FieldNEQ(FieldPlan, v))
+}
+
+// PlanIn applies the In predicate on the "plan" field.
+func PlanIn(vs ...string) predicate.User {
+	return predicate.User(sql.FieldIn(FieldPlan, vs...))
+}
+
+// PlanNotIn applies the NotIn predicate on the "plan" field.
+func PlanNotIn(vs ...string) predicate.User {
+	return predicate.User(sql.FieldNotIn(FieldPlan, vs...))
+}
+
+// PlanGT applies the GT predicate on the "plan" field.
+func PlanGT(v string) predicate.User {
+	return predicate.User(sql.FieldGT(FieldPlan, v))
+}
+
+// PlanGTE applies the GTE predicate on the "plan" field.
+func PlanGTE(v string) predicate.User {
+	return predicate.User(sql.FieldGTE(FieldPlan, v))
+}
+
+// PlanLT applies the LT predicate on the "plan" field.
+func PlanLT(v string) predicate.User {
+	return predicate.User(sql.FieldLT(FieldPlan, v))
+}
+
+// PlanLTE applies the LTE predicate on the "plan" field.
+func PlanLTE(v string) predicate.User {
+	return predicate.User(sql.FieldLTE(FieldPlan, v))
+}
+
+// PlanContains applies the Contains predicate on the "plan" field.
+func PlanContains(v string) predicate.User {
+	return predicate.User(sql.FieldContains(FieldPlan, v))
+}
+
+// PlanHasPrefix applies the HasPrefix predicate on the "plan" field.
+func PlanHasPrefix(v string) predicate.User {
+	return predicate.User(sql.FieldHasPrefix(FieldPlan, v))
+}
+
+// PlanHasSuffix applies the HasSuffix predicate on the "plan" field.
+func PlanHasSuffix(v string) predicate.User {
+	return predicate.User(sql.FieldHasSuffix(FieldPlan, v))
+}
+
+// PlanEqualFold applies the EqualFold predicate on the "plan" field.
+func PlanEqualFold(v string) predicate.User {
+	return predicate.User(sql.FieldEqualFold(FieldPlan, v))
+}
+
+// PlanContainsFold applies the ContainsFold predicate on the "plan" field.
+func PlanContainsFold(v string) predicate.User {
+	return predicate.User(sql.FieldContainsFold(FieldPlan, v))
+}
+
+// UsageHoursEQ applies the EQ predicate on the "usage_hours" field.
+func UsageHoursEQ(v float64) predicate.User {
+	return predicate.User(sql.FieldEQ(FieldUsageHours, v))
+}
+
+// UsageHoursNEQ applies the NEQ predicate on the "usage_hours" field.
+func UsageHoursNEQ(v float64) predicate.User {
+	return predicate.User(sql.FieldNEQ(FieldUsageHours, v))
+}
+
+// UsageHoursIn applies the In predicate on the "usage_hours" field.
+func UsageHoursIn(vs ...float64) predicate.User {
+	return predicate.User(sql.FieldIn(FieldUsageHours, vs...))
+}
+
+// UsageHoursNotIn applies the NotIn predicate on the "usage_hours" field.
+func UsageHoursNotIn(vs ...float64) predicate.User {
+	return predicate.User(sql.FieldNotIn(FieldUsageHours, vs...))
+}
+
+// UsageHoursGT applies the GT predicate on the "usage_hours" field.
+func UsageHoursGT(v float64) predicate.User {
+	return predicate.User(sql.FieldGT(FieldUsageHours, v))
+}
+
+// UsageHoursGTE applies the GTE predicate on the "usage_hours" field.
+func UsageHoursGTE(v float64) predicate.User {
+	return predicate.User(sql.FieldGTE(FieldUsageHours, v))
+}
+
+// UsageHoursLT applies the LT predicate on the "usage_hours" field.
+func UsageHoursLT(v float64) predicate.User {
+	return predicate.User(sql.FieldLT(FieldUsageHours, v))
+}
+
+// UsageHoursLTE applies the LTE predicate on the "usage_hours" field.
+func UsageHoursLTE(v float64) predicate.User {
+	return predicate.User(sql.FieldLTE(FieldUsageHours, v))
 }
 
 // CreatedAtEQ applies the EQ predicate on the "created_at" field.

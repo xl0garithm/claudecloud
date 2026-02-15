@@ -11,10 +11,16 @@ import (
 )
 
 func TestRoutes(t *testing.T) {
-	cfg := &config.Config{APIKey: "test-key"}
-	// nil service — we're only testing routing and auth, not handler logic
-	var svc *service.InstanceService
-	router := NewRouter(cfg, svc)
+	cfg := &config.Config{
+		APIKey:    "test-key",
+		JWTSecret: "test-jwt-secret",
+	}
+	// nil services — we're only testing routing and auth, not handler logic
+	svcs := &Services{
+		Instance: (*service.InstanceService)(nil),
+		Auth:     (*service.AuthService)(nil),
+	}
+	router := NewRouter(cfg, svcs)
 
 	t.Run("healthz returns 200", func(t *testing.T) {
 		req := httptest.NewRequest("GET", "/healthz", nil)

@@ -20,7 +20,19 @@ type User struct {
 	// Email holds the value of the "email" field.
 	Email string `json:"email,omitempty"`
 	// APIKey holds the value of the "api_key" field.
-	APIKey string `json:"api_key,omitempty"`
+	APIKey *string `json:"api_key,omitempty"`
+	// Name holds the value of the "name" field.
+	Name string `json:"name,omitempty"`
+	// StripeCustomerID holds the value of the "stripe_customer_id" field.
+	StripeCustomerID *string `json:"stripe_customer_id,omitempty"`
+	// StripeSubscriptionID holds the value of the "stripe_subscription_id" field.
+	StripeSubscriptionID *string `json:"stripe_subscription_id,omitempty"`
+	// SubscriptionStatus holds the value of the "subscription_status" field.
+	SubscriptionStatus string `json:"subscription_status,omitempty"`
+	// Plan holds the value of the "plan" field.
+	Plan string `json:"plan,omitempty"`
+	// UsageHours holds the value of the "usage_hours" field.
+	UsageHours float64 `json:"usage_hours,omitempty"`
 	// CreatedAt holds the value of the "created_at" field.
 	CreatedAt time.Time `json:"created_at,omitempty"`
 	// UpdatedAt holds the value of the "updated_at" field.
@@ -54,9 +66,11 @@ func (*User) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
 	for i := range columns {
 		switch columns[i] {
+		case user.FieldUsageHours:
+			values[i] = new(sql.NullFloat64)
 		case user.FieldID:
 			values[i] = new(sql.NullInt64)
-		case user.FieldEmail, user.FieldAPIKey:
+		case user.FieldEmail, user.FieldAPIKey, user.FieldName, user.FieldStripeCustomerID, user.FieldStripeSubscriptionID, user.FieldSubscriptionStatus, user.FieldPlan:
 			values[i] = new(sql.NullString)
 		case user.FieldCreatedAt, user.FieldUpdatedAt:
 			values[i] = new(sql.NullTime)
@@ -91,7 +105,46 @@ func (_m *User) assignValues(columns []string, values []any) error {
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field api_key", values[i])
 			} else if value.Valid {
-				_m.APIKey = value.String
+				_m.APIKey = new(string)
+				*_m.APIKey = value.String
+			}
+		case user.FieldName:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field name", values[i])
+			} else if value.Valid {
+				_m.Name = value.String
+			}
+		case user.FieldStripeCustomerID:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field stripe_customer_id", values[i])
+			} else if value.Valid {
+				_m.StripeCustomerID = new(string)
+				*_m.StripeCustomerID = value.String
+			}
+		case user.FieldStripeSubscriptionID:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field stripe_subscription_id", values[i])
+			} else if value.Valid {
+				_m.StripeSubscriptionID = new(string)
+				*_m.StripeSubscriptionID = value.String
+			}
+		case user.FieldSubscriptionStatus:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field subscription_status", values[i])
+			} else if value.Valid {
+				_m.SubscriptionStatus = value.String
+			}
+		case user.FieldPlan:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field plan", values[i])
+			} else if value.Valid {
+				_m.Plan = value.String
+			}
+		case user.FieldUsageHours:
+			if value, ok := values[i].(*sql.NullFloat64); !ok {
+				return fmt.Errorf("unexpected type %T for field usage_hours", values[i])
+			} else if value.Valid {
+				_m.UsageHours = value.Float64
 			}
 		case user.FieldCreatedAt:
 			if value, ok := values[i].(*sql.NullTime); !ok {
@@ -149,8 +202,32 @@ func (_m *User) String() string {
 	builder.WriteString("email=")
 	builder.WriteString(_m.Email)
 	builder.WriteString(", ")
-	builder.WriteString("api_key=")
-	builder.WriteString(_m.APIKey)
+	if v := _m.APIKey; v != nil {
+		builder.WriteString("api_key=")
+		builder.WriteString(*v)
+	}
+	builder.WriteString(", ")
+	builder.WriteString("name=")
+	builder.WriteString(_m.Name)
+	builder.WriteString(", ")
+	if v := _m.StripeCustomerID; v != nil {
+		builder.WriteString("stripe_customer_id=")
+		builder.WriteString(*v)
+	}
+	builder.WriteString(", ")
+	if v := _m.StripeSubscriptionID; v != nil {
+		builder.WriteString("stripe_subscription_id=")
+		builder.WriteString(*v)
+	}
+	builder.WriteString(", ")
+	builder.WriteString("subscription_status=")
+	builder.WriteString(_m.SubscriptionStatus)
+	builder.WriteString(", ")
+	builder.WriteString("plan=")
+	builder.WriteString(_m.Plan)
+	builder.WriteString(", ")
+	builder.WriteString("usage_hours=")
+	builder.WriteString(fmt.Sprintf("%v", _m.UsageHours))
 	builder.WriteString(", ")
 	builder.WriteString("created_at=")
 	builder.WriteString(_m.CreatedAt.Format(time.ANSIC))

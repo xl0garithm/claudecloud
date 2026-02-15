@@ -33,6 +33,98 @@ func (_c *UserCreate) SetAPIKey(v string) *UserCreate {
 	return _c
 }
 
+// SetNillableAPIKey sets the "api_key" field if the given value is not nil.
+func (_c *UserCreate) SetNillableAPIKey(v *string) *UserCreate {
+	if v != nil {
+		_c.SetAPIKey(*v)
+	}
+	return _c
+}
+
+// SetName sets the "name" field.
+func (_c *UserCreate) SetName(v string) *UserCreate {
+	_c.mutation.SetName(v)
+	return _c
+}
+
+// SetNillableName sets the "name" field if the given value is not nil.
+func (_c *UserCreate) SetNillableName(v *string) *UserCreate {
+	if v != nil {
+		_c.SetName(*v)
+	}
+	return _c
+}
+
+// SetStripeCustomerID sets the "stripe_customer_id" field.
+func (_c *UserCreate) SetStripeCustomerID(v string) *UserCreate {
+	_c.mutation.SetStripeCustomerID(v)
+	return _c
+}
+
+// SetNillableStripeCustomerID sets the "stripe_customer_id" field if the given value is not nil.
+func (_c *UserCreate) SetNillableStripeCustomerID(v *string) *UserCreate {
+	if v != nil {
+		_c.SetStripeCustomerID(*v)
+	}
+	return _c
+}
+
+// SetStripeSubscriptionID sets the "stripe_subscription_id" field.
+func (_c *UserCreate) SetStripeSubscriptionID(v string) *UserCreate {
+	_c.mutation.SetStripeSubscriptionID(v)
+	return _c
+}
+
+// SetNillableStripeSubscriptionID sets the "stripe_subscription_id" field if the given value is not nil.
+func (_c *UserCreate) SetNillableStripeSubscriptionID(v *string) *UserCreate {
+	if v != nil {
+		_c.SetStripeSubscriptionID(*v)
+	}
+	return _c
+}
+
+// SetSubscriptionStatus sets the "subscription_status" field.
+func (_c *UserCreate) SetSubscriptionStatus(v string) *UserCreate {
+	_c.mutation.SetSubscriptionStatus(v)
+	return _c
+}
+
+// SetNillableSubscriptionStatus sets the "subscription_status" field if the given value is not nil.
+func (_c *UserCreate) SetNillableSubscriptionStatus(v *string) *UserCreate {
+	if v != nil {
+		_c.SetSubscriptionStatus(*v)
+	}
+	return _c
+}
+
+// SetPlan sets the "plan" field.
+func (_c *UserCreate) SetPlan(v string) *UserCreate {
+	_c.mutation.SetPlan(v)
+	return _c
+}
+
+// SetNillablePlan sets the "plan" field if the given value is not nil.
+func (_c *UserCreate) SetNillablePlan(v *string) *UserCreate {
+	if v != nil {
+		_c.SetPlan(*v)
+	}
+	return _c
+}
+
+// SetUsageHours sets the "usage_hours" field.
+func (_c *UserCreate) SetUsageHours(v float64) *UserCreate {
+	_c.mutation.SetUsageHours(v)
+	return _c
+}
+
+// SetNillableUsageHours sets the "usage_hours" field if the given value is not nil.
+func (_c *UserCreate) SetNillableUsageHours(v *float64) *UserCreate {
+	if v != nil {
+		_c.SetUsageHours(*v)
+	}
+	return _c
+}
+
 // SetCreatedAt sets the "created_at" field.
 func (_c *UserCreate) SetCreatedAt(v time.Time) *UserCreate {
 	_c.mutation.SetCreatedAt(v)
@@ -111,6 +203,22 @@ func (_c *UserCreate) ExecX(ctx context.Context) {
 
 // defaults sets the default values of the builder before save.
 func (_c *UserCreate) defaults() {
+	if _, ok := _c.mutation.Name(); !ok {
+		v := user.DefaultName
+		_c.mutation.SetName(v)
+	}
+	if _, ok := _c.mutation.SubscriptionStatus(); !ok {
+		v := user.DefaultSubscriptionStatus
+		_c.mutation.SetSubscriptionStatus(v)
+	}
+	if _, ok := _c.mutation.Plan(); !ok {
+		v := user.DefaultPlan
+		_c.mutation.SetPlan(v)
+	}
+	if _, ok := _c.mutation.UsageHours(); !ok {
+		v := user.DefaultUsageHours
+		_c.mutation.SetUsageHours(v)
+	}
 	if _, ok := _c.mutation.CreatedAt(); !ok {
 		v := user.DefaultCreatedAt()
 		_c.mutation.SetCreatedAt(v)
@@ -131,13 +239,14 @@ func (_c *UserCreate) check() error {
 			return &ValidationError{Name: "email", err: fmt.Errorf(`ent: validator failed for field "User.email": %w`, err)}
 		}
 	}
-	if _, ok := _c.mutation.APIKey(); !ok {
-		return &ValidationError{Name: "api_key", err: errors.New(`ent: missing required field "User.api_key"`)}
+	if _, ok := _c.mutation.SubscriptionStatus(); !ok {
+		return &ValidationError{Name: "subscription_status", err: errors.New(`ent: missing required field "User.subscription_status"`)}
 	}
-	if v, ok := _c.mutation.APIKey(); ok {
-		if err := user.APIKeyValidator(v); err != nil {
-			return &ValidationError{Name: "api_key", err: fmt.Errorf(`ent: validator failed for field "User.api_key": %w`, err)}
-		}
+	if _, ok := _c.mutation.Plan(); !ok {
+		return &ValidationError{Name: "plan", err: errors.New(`ent: missing required field "User.plan"`)}
+	}
+	if _, ok := _c.mutation.UsageHours(); !ok {
+		return &ValidationError{Name: "usage_hours", err: errors.New(`ent: missing required field "User.usage_hours"`)}
 	}
 	if _, ok := _c.mutation.CreatedAt(); !ok {
 		return &ValidationError{Name: "created_at", err: errors.New(`ent: missing required field "User.created_at"`)}
@@ -177,7 +286,31 @@ func (_c *UserCreate) createSpec() (*User, *sqlgraph.CreateSpec) {
 	}
 	if value, ok := _c.mutation.APIKey(); ok {
 		_spec.SetField(user.FieldAPIKey, field.TypeString, value)
-		_node.APIKey = value
+		_node.APIKey = &value
+	}
+	if value, ok := _c.mutation.Name(); ok {
+		_spec.SetField(user.FieldName, field.TypeString, value)
+		_node.Name = value
+	}
+	if value, ok := _c.mutation.StripeCustomerID(); ok {
+		_spec.SetField(user.FieldStripeCustomerID, field.TypeString, value)
+		_node.StripeCustomerID = &value
+	}
+	if value, ok := _c.mutation.StripeSubscriptionID(); ok {
+		_spec.SetField(user.FieldStripeSubscriptionID, field.TypeString, value)
+		_node.StripeSubscriptionID = &value
+	}
+	if value, ok := _c.mutation.SubscriptionStatus(); ok {
+		_spec.SetField(user.FieldSubscriptionStatus, field.TypeString, value)
+		_node.SubscriptionStatus = value
+	}
+	if value, ok := _c.mutation.Plan(); ok {
+		_spec.SetField(user.FieldPlan, field.TypeString, value)
+		_node.Plan = value
+	}
+	if value, ok := _c.mutation.UsageHours(); ok {
+		_spec.SetField(user.FieldUsageHours, field.TypeFloat64, value)
+		_node.UsageHours = value
 	}
 	if value, ok := _c.mutation.CreatedAt(); ok {
 		_spec.SetField(user.FieldCreatedAt, field.TypeTime, value)

@@ -21,7 +21,24 @@ func (User) Fields() []ent.Field {
 			NotEmpty(),
 		field.String("api_key").
 			Unique().
-			NotEmpty(),
+			Optional().
+			Nillable(),
+		field.String("name").
+			Optional().
+			Default(""),
+		field.String("stripe_customer_id").
+			Unique().
+			Optional().
+			Nillable(),
+		field.String("stripe_subscription_id").
+			Optional().
+			Nillable(),
+		field.String("subscription_status").
+			Default("inactive"),
+		field.String("plan").
+			Default("free"),
+		field.Float("usage_hours").
+			Default(0),
 		field.Time("created_at").
 			Default(time.Now).
 			Immutable(),

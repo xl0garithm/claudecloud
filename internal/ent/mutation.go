@@ -1046,20 +1046,27 @@ func (m *InstanceMutation) ResetEdge(name string) error {
 // UserMutation represents an operation that mutates the User nodes in the graph.
 type UserMutation struct {
 	config
-	op               Op
-	typ              string
-	id               *int
-	email            *string
-	api_key          *string
-	created_at       *time.Time
-	updated_at       *time.Time
-	clearedFields    map[string]struct{}
-	instances        map[int]struct{}
-	removedinstances map[int]struct{}
-	clearedinstances bool
-	done             bool
-	oldValue         func(context.Context) (*User, error)
-	predicates       []predicate.User
+	op                     Op
+	typ                    string
+	id                     *int
+	email                  *string
+	api_key                *string
+	name                   *string
+	stripe_customer_id     *string
+	stripe_subscription_id *string
+	subscription_status    *string
+	plan                   *string
+	usage_hours            *float64
+	addusage_hours         *float64
+	created_at             *time.Time
+	updated_at             *time.Time
+	clearedFields          map[string]struct{}
+	instances              map[int]struct{}
+	removedinstances       map[int]struct{}
+	clearedinstances       bool
+	done                   bool
+	oldValue               func(context.Context) (*User, error)
+	predicates             []predicate.User
 }
 
 var _ ent.Mutation = (*UserMutation)(nil)
@@ -1213,7 +1220,7 @@ func (m *UserMutation) APIKey() (r string, exists bool) {
 // OldAPIKey returns the old "api_key" field's value of the User entity.
 // If the User object wasn't provided to the builder, the object is fetched from the database.
 // An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *UserMutation) OldAPIKey(ctx context.Context) (v string, err error) {
+func (m *UserMutation) OldAPIKey(ctx context.Context) (v *string, err error) {
 	if !m.op.Is(OpUpdateOne) {
 		return v, errors.New("OldAPIKey is only allowed on UpdateOne operations")
 	}
@@ -1227,9 +1234,297 @@ func (m *UserMutation) OldAPIKey(ctx context.Context) (v string, err error) {
 	return oldValue.APIKey, nil
 }
 
+// ClearAPIKey clears the value of the "api_key" field.
+func (m *UserMutation) ClearAPIKey() {
+	m.api_key = nil
+	m.clearedFields[user.FieldAPIKey] = struct{}{}
+}
+
+// APIKeyCleared returns if the "api_key" field was cleared in this mutation.
+func (m *UserMutation) APIKeyCleared() bool {
+	_, ok := m.clearedFields[user.FieldAPIKey]
+	return ok
+}
+
 // ResetAPIKey resets all changes to the "api_key" field.
 func (m *UserMutation) ResetAPIKey() {
 	m.api_key = nil
+	delete(m.clearedFields, user.FieldAPIKey)
+}
+
+// SetName sets the "name" field.
+func (m *UserMutation) SetName(s string) {
+	m.name = &s
+}
+
+// Name returns the value of the "name" field in the mutation.
+func (m *UserMutation) Name() (r string, exists bool) {
+	v := m.name
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldName returns the old "name" field's value of the User entity.
+// If the User object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *UserMutation) OldName(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldName is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldName requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldName: %w", err)
+	}
+	return oldValue.Name, nil
+}
+
+// ClearName clears the value of the "name" field.
+func (m *UserMutation) ClearName() {
+	m.name = nil
+	m.clearedFields[user.FieldName] = struct{}{}
+}
+
+// NameCleared returns if the "name" field was cleared in this mutation.
+func (m *UserMutation) NameCleared() bool {
+	_, ok := m.clearedFields[user.FieldName]
+	return ok
+}
+
+// ResetName resets all changes to the "name" field.
+func (m *UserMutation) ResetName() {
+	m.name = nil
+	delete(m.clearedFields, user.FieldName)
+}
+
+// SetStripeCustomerID sets the "stripe_customer_id" field.
+func (m *UserMutation) SetStripeCustomerID(s string) {
+	m.stripe_customer_id = &s
+}
+
+// StripeCustomerID returns the value of the "stripe_customer_id" field in the mutation.
+func (m *UserMutation) StripeCustomerID() (r string, exists bool) {
+	v := m.stripe_customer_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldStripeCustomerID returns the old "stripe_customer_id" field's value of the User entity.
+// If the User object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *UserMutation) OldStripeCustomerID(ctx context.Context) (v *string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldStripeCustomerID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldStripeCustomerID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldStripeCustomerID: %w", err)
+	}
+	return oldValue.StripeCustomerID, nil
+}
+
+// ClearStripeCustomerID clears the value of the "stripe_customer_id" field.
+func (m *UserMutation) ClearStripeCustomerID() {
+	m.stripe_customer_id = nil
+	m.clearedFields[user.FieldStripeCustomerID] = struct{}{}
+}
+
+// StripeCustomerIDCleared returns if the "stripe_customer_id" field was cleared in this mutation.
+func (m *UserMutation) StripeCustomerIDCleared() bool {
+	_, ok := m.clearedFields[user.FieldStripeCustomerID]
+	return ok
+}
+
+// ResetStripeCustomerID resets all changes to the "stripe_customer_id" field.
+func (m *UserMutation) ResetStripeCustomerID() {
+	m.stripe_customer_id = nil
+	delete(m.clearedFields, user.FieldStripeCustomerID)
+}
+
+// SetStripeSubscriptionID sets the "stripe_subscription_id" field.
+func (m *UserMutation) SetStripeSubscriptionID(s string) {
+	m.stripe_subscription_id = &s
+}
+
+// StripeSubscriptionID returns the value of the "stripe_subscription_id" field in the mutation.
+func (m *UserMutation) StripeSubscriptionID() (r string, exists bool) {
+	v := m.stripe_subscription_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldStripeSubscriptionID returns the old "stripe_subscription_id" field's value of the User entity.
+// If the User object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *UserMutation) OldStripeSubscriptionID(ctx context.Context) (v *string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldStripeSubscriptionID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldStripeSubscriptionID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldStripeSubscriptionID: %w", err)
+	}
+	return oldValue.StripeSubscriptionID, nil
+}
+
+// ClearStripeSubscriptionID clears the value of the "stripe_subscription_id" field.
+func (m *UserMutation) ClearStripeSubscriptionID() {
+	m.stripe_subscription_id = nil
+	m.clearedFields[user.FieldStripeSubscriptionID] = struct{}{}
+}
+
+// StripeSubscriptionIDCleared returns if the "stripe_subscription_id" field was cleared in this mutation.
+func (m *UserMutation) StripeSubscriptionIDCleared() bool {
+	_, ok := m.clearedFields[user.FieldStripeSubscriptionID]
+	return ok
+}
+
+// ResetStripeSubscriptionID resets all changes to the "stripe_subscription_id" field.
+func (m *UserMutation) ResetStripeSubscriptionID() {
+	m.stripe_subscription_id = nil
+	delete(m.clearedFields, user.FieldStripeSubscriptionID)
+}
+
+// SetSubscriptionStatus sets the "subscription_status" field.
+func (m *UserMutation) SetSubscriptionStatus(s string) {
+	m.subscription_status = &s
+}
+
+// SubscriptionStatus returns the value of the "subscription_status" field in the mutation.
+func (m *UserMutation) SubscriptionStatus() (r string, exists bool) {
+	v := m.subscription_status
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldSubscriptionStatus returns the old "subscription_status" field's value of the User entity.
+// If the User object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *UserMutation) OldSubscriptionStatus(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldSubscriptionStatus is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldSubscriptionStatus requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldSubscriptionStatus: %w", err)
+	}
+	return oldValue.SubscriptionStatus, nil
+}
+
+// ResetSubscriptionStatus resets all changes to the "subscription_status" field.
+func (m *UserMutation) ResetSubscriptionStatus() {
+	m.subscription_status = nil
+}
+
+// SetPlan sets the "plan" field.
+func (m *UserMutation) SetPlan(s string) {
+	m.plan = &s
+}
+
+// Plan returns the value of the "plan" field in the mutation.
+func (m *UserMutation) Plan() (r string, exists bool) {
+	v := m.plan
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldPlan returns the old "plan" field's value of the User entity.
+// If the User object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *UserMutation) OldPlan(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldPlan is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldPlan requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldPlan: %w", err)
+	}
+	return oldValue.Plan, nil
+}
+
+// ResetPlan resets all changes to the "plan" field.
+func (m *UserMutation) ResetPlan() {
+	m.plan = nil
+}
+
+// SetUsageHours sets the "usage_hours" field.
+func (m *UserMutation) SetUsageHours(f float64) {
+	m.usage_hours = &f
+	m.addusage_hours = nil
+}
+
+// UsageHours returns the value of the "usage_hours" field in the mutation.
+func (m *UserMutation) UsageHours() (r float64, exists bool) {
+	v := m.usage_hours
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldUsageHours returns the old "usage_hours" field's value of the User entity.
+// If the User object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *UserMutation) OldUsageHours(ctx context.Context) (v float64, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldUsageHours is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldUsageHours requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldUsageHours: %w", err)
+	}
+	return oldValue.UsageHours, nil
+}
+
+// AddUsageHours adds f to the "usage_hours" field.
+func (m *UserMutation) AddUsageHours(f float64) {
+	if m.addusage_hours != nil {
+		*m.addusage_hours += f
+	} else {
+		m.addusage_hours = &f
+	}
+}
+
+// AddedUsageHours returns the value that was added to the "usage_hours" field in this mutation.
+func (m *UserMutation) AddedUsageHours() (r float64, exists bool) {
+	v := m.addusage_hours
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetUsageHours resets all changes to the "usage_hours" field.
+func (m *UserMutation) ResetUsageHours() {
+	m.usage_hours = nil
+	m.addusage_hours = nil
 }
 
 // SetCreatedAt sets the "created_at" field.
@@ -1392,12 +1687,30 @@ func (m *UserMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *UserMutation) Fields() []string {
-	fields := make([]string, 0, 4)
+	fields := make([]string, 0, 10)
 	if m.email != nil {
 		fields = append(fields, user.FieldEmail)
 	}
 	if m.api_key != nil {
 		fields = append(fields, user.FieldAPIKey)
+	}
+	if m.name != nil {
+		fields = append(fields, user.FieldName)
+	}
+	if m.stripe_customer_id != nil {
+		fields = append(fields, user.FieldStripeCustomerID)
+	}
+	if m.stripe_subscription_id != nil {
+		fields = append(fields, user.FieldStripeSubscriptionID)
+	}
+	if m.subscription_status != nil {
+		fields = append(fields, user.FieldSubscriptionStatus)
+	}
+	if m.plan != nil {
+		fields = append(fields, user.FieldPlan)
+	}
+	if m.usage_hours != nil {
+		fields = append(fields, user.FieldUsageHours)
 	}
 	if m.created_at != nil {
 		fields = append(fields, user.FieldCreatedAt)
@@ -1417,6 +1730,18 @@ func (m *UserMutation) Field(name string) (ent.Value, bool) {
 		return m.Email()
 	case user.FieldAPIKey:
 		return m.APIKey()
+	case user.FieldName:
+		return m.Name()
+	case user.FieldStripeCustomerID:
+		return m.StripeCustomerID()
+	case user.FieldStripeSubscriptionID:
+		return m.StripeSubscriptionID()
+	case user.FieldSubscriptionStatus:
+		return m.SubscriptionStatus()
+	case user.FieldPlan:
+		return m.Plan()
+	case user.FieldUsageHours:
+		return m.UsageHours()
 	case user.FieldCreatedAt:
 		return m.CreatedAt()
 	case user.FieldUpdatedAt:
@@ -1434,6 +1759,18 @@ func (m *UserMutation) OldField(ctx context.Context, name string) (ent.Value, er
 		return m.OldEmail(ctx)
 	case user.FieldAPIKey:
 		return m.OldAPIKey(ctx)
+	case user.FieldName:
+		return m.OldName(ctx)
+	case user.FieldStripeCustomerID:
+		return m.OldStripeCustomerID(ctx)
+	case user.FieldStripeSubscriptionID:
+		return m.OldStripeSubscriptionID(ctx)
+	case user.FieldSubscriptionStatus:
+		return m.OldSubscriptionStatus(ctx)
+	case user.FieldPlan:
+		return m.OldPlan(ctx)
+	case user.FieldUsageHours:
+		return m.OldUsageHours(ctx)
 	case user.FieldCreatedAt:
 		return m.OldCreatedAt(ctx)
 	case user.FieldUpdatedAt:
@@ -1461,6 +1798,48 @@ func (m *UserMutation) SetField(name string, value ent.Value) error {
 		}
 		m.SetAPIKey(v)
 		return nil
+	case user.FieldName:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetName(v)
+		return nil
+	case user.FieldStripeCustomerID:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetStripeCustomerID(v)
+		return nil
+	case user.FieldStripeSubscriptionID:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetStripeSubscriptionID(v)
+		return nil
+	case user.FieldSubscriptionStatus:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetSubscriptionStatus(v)
+		return nil
+	case user.FieldPlan:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetPlan(v)
+		return nil
+	case user.FieldUsageHours:
+		v, ok := value.(float64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetUsageHours(v)
+		return nil
 	case user.FieldCreatedAt:
 		v, ok := value.(time.Time)
 		if !ok {
@@ -1482,13 +1861,21 @@ func (m *UserMutation) SetField(name string, value ent.Value) error {
 // AddedFields returns all numeric fields that were incremented/decremented during
 // this mutation.
 func (m *UserMutation) AddedFields() []string {
-	return nil
+	var fields []string
+	if m.addusage_hours != nil {
+		fields = append(fields, user.FieldUsageHours)
+	}
+	return fields
 }
 
 // AddedField returns the numeric value that was incremented/decremented on a field
 // with the given name. The second boolean return value indicates that this field
 // was not set, or was not defined in the schema.
 func (m *UserMutation) AddedField(name string) (ent.Value, bool) {
+	switch name {
+	case user.FieldUsageHours:
+		return m.AddedUsageHours()
+	}
 	return nil, false
 }
 
@@ -1497,6 +1884,13 @@ func (m *UserMutation) AddedField(name string) (ent.Value, bool) {
 // type.
 func (m *UserMutation) AddField(name string, value ent.Value) error {
 	switch name {
+	case user.FieldUsageHours:
+		v, ok := value.(float64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddUsageHours(v)
+		return nil
 	}
 	return fmt.Errorf("unknown User numeric field %s", name)
 }
@@ -1504,7 +1898,20 @@ func (m *UserMutation) AddField(name string, value ent.Value) error {
 // ClearedFields returns all nullable fields that were cleared during this
 // mutation.
 func (m *UserMutation) ClearedFields() []string {
-	return nil
+	var fields []string
+	if m.FieldCleared(user.FieldAPIKey) {
+		fields = append(fields, user.FieldAPIKey)
+	}
+	if m.FieldCleared(user.FieldName) {
+		fields = append(fields, user.FieldName)
+	}
+	if m.FieldCleared(user.FieldStripeCustomerID) {
+		fields = append(fields, user.FieldStripeCustomerID)
+	}
+	if m.FieldCleared(user.FieldStripeSubscriptionID) {
+		fields = append(fields, user.FieldStripeSubscriptionID)
+	}
+	return fields
 }
 
 // FieldCleared returns a boolean indicating if a field with the given name was
@@ -1517,6 +1924,20 @@ func (m *UserMutation) FieldCleared(name string) bool {
 // ClearField clears the value of the field with the given name. It returns an
 // error if the field is not defined in the schema.
 func (m *UserMutation) ClearField(name string) error {
+	switch name {
+	case user.FieldAPIKey:
+		m.ClearAPIKey()
+		return nil
+	case user.FieldName:
+		m.ClearName()
+		return nil
+	case user.FieldStripeCustomerID:
+		m.ClearStripeCustomerID()
+		return nil
+	case user.FieldStripeSubscriptionID:
+		m.ClearStripeSubscriptionID()
+		return nil
+	}
 	return fmt.Errorf("unknown User nullable field %s", name)
 }
 
@@ -1529,6 +1950,24 @@ func (m *UserMutation) ResetField(name string) error {
 		return nil
 	case user.FieldAPIKey:
 		m.ResetAPIKey()
+		return nil
+	case user.FieldName:
+		m.ResetName()
+		return nil
+	case user.FieldStripeCustomerID:
+		m.ResetStripeCustomerID()
+		return nil
+	case user.FieldStripeSubscriptionID:
+		m.ResetStripeSubscriptionID()
+		return nil
+	case user.FieldSubscriptionStatus:
+		m.ResetSubscriptionStatus()
+		return nil
+	case user.FieldPlan:
+		m.ResetPlan()
+		return nil
+	case user.FieldUsageHours:
+		m.ResetUsageHours()
 		return nil
 	case user.FieldCreatedAt:
 		m.ResetCreatedAt()

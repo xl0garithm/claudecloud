@@ -57,6 +57,121 @@ func (_u *UserUpdate) SetNillableAPIKey(v *string) *UserUpdate {
 	return _u
 }
 
+// ClearAPIKey clears the value of the "api_key" field.
+func (_u *UserUpdate) ClearAPIKey() *UserUpdate {
+	_u.mutation.ClearAPIKey()
+	return _u
+}
+
+// SetName sets the "name" field.
+func (_u *UserUpdate) SetName(v string) *UserUpdate {
+	_u.mutation.SetName(v)
+	return _u
+}
+
+// SetNillableName sets the "name" field if the given value is not nil.
+func (_u *UserUpdate) SetNillableName(v *string) *UserUpdate {
+	if v != nil {
+		_u.SetName(*v)
+	}
+	return _u
+}
+
+// ClearName clears the value of the "name" field.
+func (_u *UserUpdate) ClearName() *UserUpdate {
+	_u.mutation.ClearName()
+	return _u
+}
+
+// SetStripeCustomerID sets the "stripe_customer_id" field.
+func (_u *UserUpdate) SetStripeCustomerID(v string) *UserUpdate {
+	_u.mutation.SetStripeCustomerID(v)
+	return _u
+}
+
+// SetNillableStripeCustomerID sets the "stripe_customer_id" field if the given value is not nil.
+func (_u *UserUpdate) SetNillableStripeCustomerID(v *string) *UserUpdate {
+	if v != nil {
+		_u.SetStripeCustomerID(*v)
+	}
+	return _u
+}
+
+// ClearStripeCustomerID clears the value of the "stripe_customer_id" field.
+func (_u *UserUpdate) ClearStripeCustomerID() *UserUpdate {
+	_u.mutation.ClearStripeCustomerID()
+	return _u
+}
+
+// SetStripeSubscriptionID sets the "stripe_subscription_id" field.
+func (_u *UserUpdate) SetStripeSubscriptionID(v string) *UserUpdate {
+	_u.mutation.SetStripeSubscriptionID(v)
+	return _u
+}
+
+// SetNillableStripeSubscriptionID sets the "stripe_subscription_id" field if the given value is not nil.
+func (_u *UserUpdate) SetNillableStripeSubscriptionID(v *string) *UserUpdate {
+	if v != nil {
+		_u.SetStripeSubscriptionID(*v)
+	}
+	return _u
+}
+
+// ClearStripeSubscriptionID clears the value of the "stripe_subscription_id" field.
+func (_u *UserUpdate) ClearStripeSubscriptionID() *UserUpdate {
+	_u.mutation.ClearStripeSubscriptionID()
+	return _u
+}
+
+// SetSubscriptionStatus sets the "subscription_status" field.
+func (_u *UserUpdate) SetSubscriptionStatus(v string) *UserUpdate {
+	_u.mutation.SetSubscriptionStatus(v)
+	return _u
+}
+
+// SetNillableSubscriptionStatus sets the "subscription_status" field if the given value is not nil.
+func (_u *UserUpdate) SetNillableSubscriptionStatus(v *string) *UserUpdate {
+	if v != nil {
+		_u.SetSubscriptionStatus(*v)
+	}
+	return _u
+}
+
+// SetPlan sets the "plan" field.
+func (_u *UserUpdate) SetPlan(v string) *UserUpdate {
+	_u.mutation.SetPlan(v)
+	return _u
+}
+
+// SetNillablePlan sets the "plan" field if the given value is not nil.
+func (_u *UserUpdate) SetNillablePlan(v *string) *UserUpdate {
+	if v != nil {
+		_u.SetPlan(*v)
+	}
+	return _u
+}
+
+// SetUsageHours sets the "usage_hours" field.
+func (_u *UserUpdate) SetUsageHours(v float64) *UserUpdate {
+	_u.mutation.ResetUsageHours()
+	_u.mutation.SetUsageHours(v)
+	return _u
+}
+
+// SetNillableUsageHours sets the "usage_hours" field if the given value is not nil.
+func (_u *UserUpdate) SetNillableUsageHours(v *float64) *UserUpdate {
+	if v != nil {
+		_u.SetUsageHours(*v)
+	}
+	return _u
+}
+
+// AddUsageHours adds value to the "usage_hours" field.
+func (_u *UserUpdate) AddUsageHours(v float64) *UserUpdate {
+	_u.mutation.AddUsageHours(v)
+	return _u
+}
+
 // SetUpdatedAt sets the "updated_at" field.
 func (_u *UserUpdate) SetUpdatedAt(v time.Time) *UserUpdate {
 	_u.mutation.SetUpdatedAt(v)
@@ -147,11 +262,6 @@ func (_u *UserUpdate) check() error {
 			return &ValidationError{Name: "email", err: fmt.Errorf(`ent: validator failed for field "User.email": %w`, err)}
 		}
 	}
-	if v, ok := _u.mutation.APIKey(); ok {
-		if err := user.APIKeyValidator(v); err != nil {
-			return &ValidationError{Name: "api_key", err: fmt.Errorf(`ent: validator failed for field "User.api_key": %w`, err)}
-		}
-	}
 	return nil
 }
 
@@ -172,6 +282,39 @@ func (_u *UserUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 	}
 	if value, ok := _u.mutation.APIKey(); ok {
 		_spec.SetField(user.FieldAPIKey, field.TypeString, value)
+	}
+	if _u.mutation.APIKeyCleared() {
+		_spec.ClearField(user.FieldAPIKey, field.TypeString)
+	}
+	if value, ok := _u.mutation.Name(); ok {
+		_spec.SetField(user.FieldName, field.TypeString, value)
+	}
+	if _u.mutation.NameCleared() {
+		_spec.ClearField(user.FieldName, field.TypeString)
+	}
+	if value, ok := _u.mutation.StripeCustomerID(); ok {
+		_spec.SetField(user.FieldStripeCustomerID, field.TypeString, value)
+	}
+	if _u.mutation.StripeCustomerIDCleared() {
+		_spec.ClearField(user.FieldStripeCustomerID, field.TypeString)
+	}
+	if value, ok := _u.mutation.StripeSubscriptionID(); ok {
+		_spec.SetField(user.FieldStripeSubscriptionID, field.TypeString, value)
+	}
+	if _u.mutation.StripeSubscriptionIDCleared() {
+		_spec.ClearField(user.FieldStripeSubscriptionID, field.TypeString)
+	}
+	if value, ok := _u.mutation.SubscriptionStatus(); ok {
+		_spec.SetField(user.FieldSubscriptionStatus, field.TypeString, value)
+	}
+	if value, ok := _u.mutation.Plan(); ok {
+		_spec.SetField(user.FieldPlan, field.TypeString, value)
+	}
+	if value, ok := _u.mutation.UsageHours(); ok {
+		_spec.SetField(user.FieldUsageHours, field.TypeFloat64, value)
+	}
+	if value, ok := _u.mutation.AddedUsageHours(); ok {
+		_spec.AddField(user.FieldUsageHours, field.TypeFloat64, value)
 	}
 	if value, ok := _u.mutation.UpdatedAt(); ok {
 		_spec.SetField(user.FieldUpdatedAt, field.TypeTime, value)
@@ -266,6 +409,121 @@ func (_u *UserUpdateOne) SetNillableAPIKey(v *string) *UserUpdateOne {
 	if v != nil {
 		_u.SetAPIKey(*v)
 	}
+	return _u
+}
+
+// ClearAPIKey clears the value of the "api_key" field.
+func (_u *UserUpdateOne) ClearAPIKey() *UserUpdateOne {
+	_u.mutation.ClearAPIKey()
+	return _u
+}
+
+// SetName sets the "name" field.
+func (_u *UserUpdateOne) SetName(v string) *UserUpdateOne {
+	_u.mutation.SetName(v)
+	return _u
+}
+
+// SetNillableName sets the "name" field if the given value is not nil.
+func (_u *UserUpdateOne) SetNillableName(v *string) *UserUpdateOne {
+	if v != nil {
+		_u.SetName(*v)
+	}
+	return _u
+}
+
+// ClearName clears the value of the "name" field.
+func (_u *UserUpdateOne) ClearName() *UserUpdateOne {
+	_u.mutation.ClearName()
+	return _u
+}
+
+// SetStripeCustomerID sets the "stripe_customer_id" field.
+func (_u *UserUpdateOne) SetStripeCustomerID(v string) *UserUpdateOne {
+	_u.mutation.SetStripeCustomerID(v)
+	return _u
+}
+
+// SetNillableStripeCustomerID sets the "stripe_customer_id" field if the given value is not nil.
+func (_u *UserUpdateOne) SetNillableStripeCustomerID(v *string) *UserUpdateOne {
+	if v != nil {
+		_u.SetStripeCustomerID(*v)
+	}
+	return _u
+}
+
+// ClearStripeCustomerID clears the value of the "stripe_customer_id" field.
+func (_u *UserUpdateOne) ClearStripeCustomerID() *UserUpdateOne {
+	_u.mutation.ClearStripeCustomerID()
+	return _u
+}
+
+// SetStripeSubscriptionID sets the "stripe_subscription_id" field.
+func (_u *UserUpdateOne) SetStripeSubscriptionID(v string) *UserUpdateOne {
+	_u.mutation.SetStripeSubscriptionID(v)
+	return _u
+}
+
+// SetNillableStripeSubscriptionID sets the "stripe_subscription_id" field if the given value is not nil.
+func (_u *UserUpdateOne) SetNillableStripeSubscriptionID(v *string) *UserUpdateOne {
+	if v != nil {
+		_u.SetStripeSubscriptionID(*v)
+	}
+	return _u
+}
+
+// ClearStripeSubscriptionID clears the value of the "stripe_subscription_id" field.
+func (_u *UserUpdateOne) ClearStripeSubscriptionID() *UserUpdateOne {
+	_u.mutation.ClearStripeSubscriptionID()
+	return _u
+}
+
+// SetSubscriptionStatus sets the "subscription_status" field.
+func (_u *UserUpdateOne) SetSubscriptionStatus(v string) *UserUpdateOne {
+	_u.mutation.SetSubscriptionStatus(v)
+	return _u
+}
+
+// SetNillableSubscriptionStatus sets the "subscription_status" field if the given value is not nil.
+func (_u *UserUpdateOne) SetNillableSubscriptionStatus(v *string) *UserUpdateOne {
+	if v != nil {
+		_u.SetSubscriptionStatus(*v)
+	}
+	return _u
+}
+
+// SetPlan sets the "plan" field.
+func (_u *UserUpdateOne) SetPlan(v string) *UserUpdateOne {
+	_u.mutation.SetPlan(v)
+	return _u
+}
+
+// SetNillablePlan sets the "plan" field if the given value is not nil.
+func (_u *UserUpdateOne) SetNillablePlan(v *string) *UserUpdateOne {
+	if v != nil {
+		_u.SetPlan(*v)
+	}
+	return _u
+}
+
+// SetUsageHours sets the "usage_hours" field.
+func (_u *UserUpdateOne) SetUsageHours(v float64) *UserUpdateOne {
+	_u.mutation.ResetUsageHours()
+	_u.mutation.SetUsageHours(v)
+	return _u
+}
+
+// SetNillableUsageHours sets the "usage_hours" field if the given value is not nil.
+func (_u *UserUpdateOne) SetNillableUsageHours(v *float64) *UserUpdateOne {
+	if v != nil {
+		_u.SetUsageHours(*v)
+	}
+	return _u
+}
+
+// AddUsageHours adds value to the "usage_hours" field.
+func (_u *UserUpdateOne) AddUsageHours(v float64) *UserUpdateOne {
+	_u.mutation.AddUsageHours(v)
 	return _u
 }
 
@@ -372,11 +630,6 @@ func (_u *UserUpdateOne) check() error {
 			return &ValidationError{Name: "email", err: fmt.Errorf(`ent: validator failed for field "User.email": %w`, err)}
 		}
 	}
-	if v, ok := _u.mutation.APIKey(); ok {
-		if err := user.APIKeyValidator(v); err != nil {
-			return &ValidationError{Name: "api_key", err: fmt.Errorf(`ent: validator failed for field "User.api_key": %w`, err)}
-		}
-	}
 	return nil
 }
 
@@ -414,6 +667,39 @@ func (_u *UserUpdateOne) sqlSave(ctx context.Context) (_node *User, err error) {
 	}
 	if value, ok := _u.mutation.APIKey(); ok {
 		_spec.SetField(user.FieldAPIKey, field.TypeString, value)
+	}
+	if _u.mutation.APIKeyCleared() {
+		_spec.ClearField(user.FieldAPIKey, field.TypeString)
+	}
+	if value, ok := _u.mutation.Name(); ok {
+		_spec.SetField(user.FieldName, field.TypeString, value)
+	}
+	if _u.mutation.NameCleared() {
+		_spec.ClearField(user.FieldName, field.TypeString)
+	}
+	if value, ok := _u.mutation.StripeCustomerID(); ok {
+		_spec.SetField(user.FieldStripeCustomerID, field.TypeString, value)
+	}
+	if _u.mutation.StripeCustomerIDCleared() {
+		_spec.ClearField(user.FieldStripeCustomerID, field.TypeString)
+	}
+	if value, ok := _u.mutation.StripeSubscriptionID(); ok {
+		_spec.SetField(user.FieldStripeSubscriptionID, field.TypeString, value)
+	}
+	if _u.mutation.StripeSubscriptionIDCleared() {
+		_spec.ClearField(user.FieldStripeSubscriptionID, field.TypeString)
+	}
+	if value, ok := _u.mutation.SubscriptionStatus(); ok {
+		_spec.SetField(user.FieldSubscriptionStatus, field.TypeString, value)
+	}
+	if value, ok := _u.mutation.Plan(); ok {
+		_spec.SetField(user.FieldPlan, field.TypeString, value)
+	}
+	if value, ok := _u.mutation.UsageHours(); ok {
+		_spec.SetField(user.FieldUsageHours, field.TypeFloat64, value)
+	}
+	if value, ok := _u.mutation.AddedUsageHours(); ok {
+		_spec.AddField(user.FieldUsageHours, field.TypeFloat64, value)
 	}
 	if value, ok := _u.mutation.UpdatedAt(); ok {
 		_spec.SetField(user.FieldUpdatedAt, field.TypeTime, value)

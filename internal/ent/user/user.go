@@ -18,6 +18,18 @@ const (
 	FieldEmail = "email"
 	// FieldAPIKey holds the string denoting the api_key field in the database.
 	FieldAPIKey = "api_key"
+	// FieldName holds the string denoting the name field in the database.
+	FieldName = "name"
+	// FieldStripeCustomerID holds the string denoting the stripe_customer_id field in the database.
+	FieldStripeCustomerID = "stripe_customer_id"
+	// FieldStripeSubscriptionID holds the string denoting the stripe_subscription_id field in the database.
+	FieldStripeSubscriptionID = "stripe_subscription_id"
+	// FieldSubscriptionStatus holds the string denoting the subscription_status field in the database.
+	FieldSubscriptionStatus = "subscription_status"
+	// FieldPlan holds the string denoting the plan field in the database.
+	FieldPlan = "plan"
+	// FieldUsageHours holds the string denoting the usage_hours field in the database.
+	FieldUsageHours = "usage_hours"
 	// FieldCreatedAt holds the string denoting the created_at field in the database.
 	FieldCreatedAt = "created_at"
 	// FieldUpdatedAt holds the string denoting the updated_at field in the database.
@@ -40,6 +52,12 @@ var Columns = []string{
 	FieldID,
 	FieldEmail,
 	FieldAPIKey,
+	FieldName,
+	FieldStripeCustomerID,
+	FieldStripeSubscriptionID,
+	FieldSubscriptionStatus,
+	FieldPlan,
+	FieldUsageHours,
 	FieldCreatedAt,
 	FieldUpdatedAt,
 }
@@ -57,8 +75,14 @@ func ValidColumn(column string) bool {
 var (
 	// EmailValidator is a validator for the "email" field. It is called by the builders before save.
 	EmailValidator func(string) error
-	// APIKeyValidator is a validator for the "api_key" field. It is called by the builders before save.
-	APIKeyValidator func(string) error
+	// DefaultName holds the default value on creation for the "name" field.
+	DefaultName string
+	// DefaultSubscriptionStatus holds the default value on creation for the "subscription_status" field.
+	DefaultSubscriptionStatus string
+	// DefaultPlan holds the default value on creation for the "plan" field.
+	DefaultPlan string
+	// DefaultUsageHours holds the default value on creation for the "usage_hours" field.
+	DefaultUsageHours float64
 	// DefaultCreatedAt holds the default value on creation for the "created_at" field.
 	DefaultCreatedAt func() time.Time
 	// DefaultUpdatedAt holds the default value on creation for the "updated_at" field.
@@ -83,6 +107,36 @@ func ByEmail(opts ...sql.OrderTermOption) OrderOption {
 // ByAPIKey orders the results by the api_key field.
 func ByAPIKey(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldAPIKey, opts...).ToFunc()
+}
+
+// ByName orders the results by the name field.
+func ByName(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldName, opts...).ToFunc()
+}
+
+// ByStripeCustomerID orders the results by the stripe_customer_id field.
+func ByStripeCustomerID(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldStripeCustomerID, opts...).ToFunc()
+}
+
+// ByStripeSubscriptionID orders the results by the stripe_subscription_id field.
+func ByStripeSubscriptionID(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldStripeSubscriptionID, opts...).ToFunc()
+}
+
+// BySubscriptionStatus orders the results by the subscription_status field.
+func BySubscriptionStatus(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldSubscriptionStatus, opts...).ToFunc()
+}
+
+// ByPlan orders the results by the plan field.
+func ByPlan(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldPlan, opts...).ToFunc()
+}
+
+// ByUsageHours orders the results by the usage_hours field.
+func ByUsageHours(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldUsageHours, opts...).ToFunc()
 }
 
 // ByCreatedAt orders the results by the created_at field.

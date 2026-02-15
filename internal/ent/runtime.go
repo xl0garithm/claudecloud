@@ -44,16 +44,28 @@ func init() {
 	userDescEmail := userFields[0].Descriptor()
 	// user.EmailValidator is a validator for the "email" field. It is called by the builders before save.
 	user.EmailValidator = userDescEmail.Validators[0].(func(string) error)
-	// userDescAPIKey is the schema descriptor for api_key field.
-	userDescAPIKey := userFields[1].Descriptor()
-	// user.APIKeyValidator is a validator for the "api_key" field. It is called by the builders before save.
-	user.APIKeyValidator = userDescAPIKey.Validators[0].(func(string) error)
+	// userDescName is the schema descriptor for name field.
+	userDescName := userFields[2].Descriptor()
+	// user.DefaultName holds the default value on creation for the name field.
+	user.DefaultName = userDescName.Default.(string)
+	// userDescSubscriptionStatus is the schema descriptor for subscription_status field.
+	userDescSubscriptionStatus := userFields[5].Descriptor()
+	// user.DefaultSubscriptionStatus holds the default value on creation for the subscription_status field.
+	user.DefaultSubscriptionStatus = userDescSubscriptionStatus.Default.(string)
+	// userDescPlan is the schema descriptor for plan field.
+	userDescPlan := userFields[6].Descriptor()
+	// user.DefaultPlan holds the default value on creation for the plan field.
+	user.DefaultPlan = userDescPlan.Default.(string)
+	// userDescUsageHours is the schema descriptor for usage_hours field.
+	userDescUsageHours := userFields[7].Descriptor()
+	// user.DefaultUsageHours holds the default value on creation for the usage_hours field.
+	user.DefaultUsageHours = userDescUsageHours.Default.(float64)
 	// userDescCreatedAt is the schema descriptor for created_at field.
-	userDescCreatedAt := userFields[2].Descriptor()
+	userDescCreatedAt := userFields[8].Descriptor()
 	// user.DefaultCreatedAt holds the default value on creation for the created_at field.
 	user.DefaultCreatedAt = userDescCreatedAt.Default.(func() time.Time)
 	// userDescUpdatedAt is the schema descriptor for updated_at field.
-	userDescUpdatedAt := userFields[3].Descriptor()
+	userDescUpdatedAt := userFields[9].Descriptor()
 	// user.DefaultUpdatedAt holds the default value on creation for the updated_at field.
 	user.DefaultUpdatedAt = userDescUpdatedAt.Default.(func() time.Time)
 	// user.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
