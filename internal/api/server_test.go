@@ -19,6 +19,7 @@ func TestRoutes(t *testing.T) {
 	svcs := &Services{
 		Instance: (*service.InstanceService)(nil),
 		Auth:     (*service.AuthService)(nil),
+		Version:  "test",
 	}
 	router := NewRouter(cfg, svcs)
 

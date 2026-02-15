@@ -5,8 +5,10 @@ GO := go
 GOFLAGS := -v
 BINARY := bin/cloudcode
 
+VERSION ?= $(shell git describe --tags --always 2>/dev/null || echo "dev")
+
 build:
-	$(GO) build $(GOFLAGS) -o $(BINARY) ./cmd/cloudcode
+	$(GO) build $(GOFLAGS) -ldflags "-X main.version=$(VERSION)" -o $(BINARY) ./cmd/cloudcode
 
 test:
 	$(GO) test ./... -short -count=1

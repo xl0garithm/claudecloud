@@ -11,7 +11,7 @@ func TestHealth(t *testing.T) {
 	req := httptest.NewRequest("GET", "/healthz", nil)
 	rec := httptest.NewRecorder()
 
-	Health().ServeHTTP(rec, req)
+	Health(nil, "test-version").ServeHTTP(rec, req)
 
 	if rec.Code != http.StatusOK {
 		t.Fatalf("got status %d, want %d", rec.Code, http.StatusOK)
@@ -23,5 +23,11 @@ func TestHealth(t *testing.T) {
 	}
 	if body["status"] != "ok" {
 		t.Errorf("got status %q, want %q", body["status"], "ok")
+	}
+	if body["version"] != "test-version" {
+		t.Errorf("got version %q, want %q", body["version"], "test-version")
+	}
+	if body["db"] != "ok" {
+		t.Errorf("got db %q, want %q", body["db"], "ok")
 	}
 }

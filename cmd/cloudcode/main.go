@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"database/sql"
 	"log/slog"
 	"net/http"
 	"os"
@@ -20,8 +21,18 @@ import (
 	"github.com/logan/cloudcode/internal/service"
 )
 
+// version is set by -ldflags at build time.
+var version = "dev"
+
 func main() {
 	cfg := config.Load()
+
+	// Validate config (fatal in production)
+	if err := cfg.Validate(); err != nil {
+		// Use a temporary logger for validation errors
+		slog.Error("configuration invalid", "error", err)
+		os.Exit(1)
+	}
 
 	// Structured logger: JSON in production, text in development
 	var handler slog.Handler
@@ -33,6 +44,13 @@ func main() {
 	logger := slog.New(handler)
 
 	// Database
+	sqlDB, err := sql.Open("postgres", cfg.DatabaseURL)
+	if err != nil {
+		logger.Error("failed to open database", "error", err)
+		os.Exit(1)
+	}
+	defer sqlDB.Close()
+
 	db, err := ent.Open("postgres", cfg.DatabaseURL)
 	if err != nil {
 		logger.Error("failed to connect to database", "error", err)
@@ -121,6 +139,8 @@ func main() {
 		Instance: instanceSvc,
 		Auth:     authSvc,
 		Billing:  billingSvc,
+		DB:       sqlDB,
+		Version:  version,
 	}
 	router := api.NewRouter(cfg, svcs)
 

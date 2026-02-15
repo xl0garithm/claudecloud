@@ -1,6 +1,7 @@
 package api
 
 import (
+	"database/sql"
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
@@ -17,6 +18,8 @@ type Services struct {
 	Instance *service.InstanceService
 	Auth     *service.AuthService
 	Billing  *service.BillingService // nil if Stripe not configured
+	DB       *sql.DB
+	Version  string
 }
 
 // NewRouter creates the Chi router with all routes and middleware.
@@ -35,7 +38,7 @@ func NewRouter(cfg *config.Config, svcs *Services) http.Handler {
 	}
 
 	// Health check (no auth)
-	r.Get("/healthz", handler.Health())
+	r.Get("/healthz", handler.Health(svcs.DB, svcs.Version))
 
 	// Connect script (no user auth — supports Bearer, cookie, or ?user_id)
 	ch := handler.NewConnectHandler(svcs.Instance, cfg.JWTSecret)
@@ -45,9 +48,12 @@ func NewRouter(cfg *config.Config, svcs *Services) http.Handler {
 	ih := handler.NewInstallHandler(cfg.BaseURL)
 	r.Get("/install.sh", ih.ServeScript)
 
-	// Auth routes (no auth required)
+	// Auth routes (no auth required) — strict rate limit
 	ah := handler.NewAuthHandler(svcs.Auth, cfg.FrontendURL)
-	r.Post("/auth/login", ah.Login)
+	r.Group(func(r chi.Router) {
+		r.Use(middleware.RateLimit(5.0/60.0, 5)) // 5 req/min
+		r.Post("/auth/login", ah.Login)
+	})
 	r.Get("/auth/verify", ah.Verify)
 
 	// Billing webhook (no user auth — verified by Stripe signature)
@@ -63,6 +69,7 @@ func NewRouter(cfg *config.Config, svcs *Services) http.Handler {
 	// Authenticated routes (dual-mode: JWT + API key)
 	r.Group(func(r chi.Router) {
 		r.Use(middleware.UserAuth(cfg.JWTSecret, cfg.APIKey))
+		r.Use(middleware.RateLimit(1, 60)) // 60 req/min burst
 
 		// Auth (me)
 		r.Get("/auth/me", ah.Me)

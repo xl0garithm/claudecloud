@@ -1,6 +1,10 @@
 package config
 
-import "os"
+import (
+	"fmt"
+	"os"
+	"strings"
+)
 
 // Config holds application configuration loaded from environment variables.
 type Config struct {
@@ -77,6 +81,31 @@ func Load() *Config {
 
 		AnthropicAPIKey: os.Getenv("ANTHROPIC_API_KEY"),
 	}
+}
+
+// Validate checks that critical configuration is set for production mode.
+// Returns nil if everything is okay, or an error describing what's missing.
+func (c *Config) Validate() error {
+	if c.Environment != "production" {
+		return nil
+	}
+
+	var errs []string
+
+	if c.JWTSecret == "dev-jwt-secret-change-in-production" || c.JWTSecret == "" {
+		errs = append(errs, "JWT_SECRET must be set to a secure value in production")
+	}
+	if c.DatabaseURL == "" {
+		errs = append(errs, "DATABASE_URL is required in production")
+	}
+	if c.StripeSecretKey == "" {
+		errs = append(errs, "STRIPE_SECRET_KEY is recommended in production (billing disabled)")
+	}
+
+	if len(errs) > 0 {
+		return fmt.Errorf("config validation failed:\n  - %s", strings.Join(errs, "\n  - "))
+	}
+	return nil
 }
 
 func envOrDefault(key, fallback string) string {
