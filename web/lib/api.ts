@@ -25,6 +25,18 @@ export interface UsageSummary {
   usage_hours: number;
 }
 
+export interface FileEntry {
+  name: string;
+  type: "file" | "directory";
+  path: string;
+}
+
+export interface Project {
+  name: string;
+  path: string;
+  remoteUrl: string;
+}
+
 async function apiFetch<T>(path: string, options?: RequestInit): Promise<T> {
   const res = await fetch(`${API_BASE}${path}`, {
     credentials: "include",
@@ -65,6 +77,10 @@ export const api = {
     return apiFetch<Instance>(`/instances/${id}`);
   },
 
+  getMyInstance() {
+    return apiFetch<Instance>("/instances/mine");
+  },
+
   createInstance() {
     return apiFetch<Instance>("/instances", {
       method: "POST",
@@ -97,5 +113,30 @@ export const api = {
 
   getBillingPortal() {
     return apiFetch<{ url: string }>("/billing/portal");
+  },
+
+  getFiles(instanceId: number, path?: string) {
+    const params = path ? `?path=${encodeURIComponent(path)}` : "";
+    return apiFetch<FileEntry[]>(`/instances/${instanceId}/files${params}`);
+  },
+
+  readFile(instanceId: number, path: string) {
+    return apiFetch<{ path: string; content: string; truncated: boolean }>(
+      `/instances/${instanceId}/files/read?path=${encodeURIComponent(path)}`
+    );
+  },
+
+  getProjects(instanceId: number) {
+    return apiFetch<Project[]>(`/instances/${instanceId}/projects`);
+  },
+
+  cloneProject(instanceId: number, url: string, branch?: string) {
+    return apiFetch<{ status: string; output: string }>(
+      `/instances/${instanceId}/projects/clone`,
+      {
+        method: "POST",
+        body: JSON.stringify({ url, branch: branch || undefined }),
+      }
+    );
   },
 };
