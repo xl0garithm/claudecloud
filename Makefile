@@ -1,4 +1,4 @@
-.PHONY: build test dev generate image-build clean vet lint
+.PHONY: build test dev generate image-build clean vet lint e2e
 
 # Go
 GO := go
@@ -33,6 +33,9 @@ dev: image-build
 
 dev-down:
 	docker compose down
+
+e2e:
+	./scripts/e2e-test.sh
 
 clean:
 	rm -rf $(BINARY)

@@ -1,0 +1,36 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: cloudcode
+      POSTGRES_PASSWORD: cloudcode
+      POSTGRES_DB: cloudcode
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U cloudcode"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8080:8080"
+    environment:
+      PROVIDER: docker
+      DATABASE_URL: postgres://cloudcode:cloudcode@postgres:5432/cloudcode?sslmode=disable
+      API_KEY: dev-api-key
+      LISTEN_ADDR: ":8080"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+volumes:
+  pgdata:
