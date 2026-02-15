@@ -18,6 +18,7 @@ var (
 		{Name: "status", Type: field.TypeString, Default: "provisioning"},
 		{Name: "volume_id", Type: field.TypeString, Nullable: true},
 		{Name: "netbird_config", Type: field.TypeString, Nullable: true},
+		{Name: "agent_secret", Type: field.TypeString, Nullable: true},
 		{Name: "last_activity_at", Type: field.TypeTime, Nullable: true},
 		{Name: "created_at", Type: field.TypeTime},
 		{Name: "updated_at", Type: field.TypeTime},
@@ -31,7 +32,7 @@ var (
 		ForeignKeys: []*schema.ForeignKey{
 			{
 				Symbol:     "instances_users_instances",
-				Columns:    []*schema.Column{InstancesColumns[11]},
+				Columns:    []*schema.Column{InstancesColumns[12]},
 				RefColumns: []*schema.Column{UsersColumns[0]},
 				OnDelete:   schema.NoAction,
 			},

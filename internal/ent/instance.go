@@ -32,6 +32,8 @@ type Instance struct {
 	VolumeID string `json:"volume_id,omitempty"`
 	// JSON-encoded Netbird config (group ID, route ID, policy ID, setup key ID)
 	NetbirdConfig string `json:"netbird_config,omitempty"`
+	// Per-instance secret for agent authentication
+	AgentSecret string `json:"-"`
 	// Last detected activity timestamp for idle detection
 	LastActivityAt *time.Time `json:"last_activity_at,omitempty"`
 	// CreatedAt holds the value of the "created_at" field.
@@ -72,7 +74,7 @@ func (*Instance) scanValues(columns []string) ([]any, error) {
 		switch columns[i] {
 		case instance.FieldID, instance.FieldPort:
 			values[i] = new(sql.NullInt64)
-		case instance.FieldProvider, instance.FieldProviderID, instance.FieldHost, instance.FieldStatus, instance.FieldVolumeID, instance.FieldNetbirdConfig:
+		case instance.FieldProvider, instance.FieldProviderID, instance.FieldHost, instance.FieldStatus, instance.FieldVolumeID, instance.FieldNetbirdConfig, instance.FieldAgentSecret:
 			values[i] = new(sql.NullString)
 		case instance.FieldLastActivityAt, instance.FieldCreatedAt, instance.FieldUpdatedAt:
 			values[i] = new(sql.NullTime)
@@ -140,6 +142,12 @@ func (_m *Instance) assignValues(columns []string, values []any) error {
 				return fmt.Errorf("unexpected type %T for field netbird_config", values[i])
 			} else if value.Valid {
 				_m.NetbirdConfig = value.String
+			}
+		case instance.FieldAgentSecret:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field agent_secret", values[i])
+			} else if value.Valid {
+				_m.AgentSecret = value.String
 			}
 		case instance.FieldLastActivityAt:
 			if value, ok := values[i].(*sql.NullTime); !ok {
@@ -228,6 +236,8 @@ func (_m *Instance) String() string {
 	builder.WriteString(", ")
 	builder.WriteString("netbird_config=")
 	builder.WriteString(_m.NetbirdConfig)
+	builder.WriteString(", ")
+	builder.WriteString("agent_secret=<sensitive>")
 	builder.WriteString(", ")
 	if v := _m.LastActivityAt; v != nil {
 		builder.WriteString("last_activity_at=")

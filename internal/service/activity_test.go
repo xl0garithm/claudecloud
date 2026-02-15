@@ -20,7 +20,7 @@ func setupActivityTest(t *testing.T) (*ActivityService, *InstanceService, *ent.C
 	mock := provider.NewMock()
 	logger := log.New(os.Stderr, "test: ", 0)
 
-	instSvc := NewInstanceService(client, mock)
+	instSvc := NewInstanceService(client, mock, "")
 	actSvc := NewActivityService(client, mock, logger, time.Minute, 2*time.Hour)
 
 	return actSvc, instSvc, client, mock

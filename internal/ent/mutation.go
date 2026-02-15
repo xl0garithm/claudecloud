@@ -43,6 +43,7 @@ type InstanceMutation struct {
 	status           *string
 	volume_id        *string
 	netbird_config   *string
+	agent_secret     *string
 	last_activity_at *time.Time
 	created_at       *time.Time
 	updated_at       *time.Time
@@ -477,6 +478,55 @@ func (m *InstanceMutation) ResetNetbirdConfig() {
 	delete(m.clearedFields, instance.FieldNetbirdConfig)
 }
 
+// SetAgentSecret sets the "agent_secret" field.
+func (m *InstanceMutation) SetAgentSecret(s string) {
+	m.agent_secret = &s
+}
+
+// AgentSecret returns the value of the "agent_secret" field in the mutation.
+func (m *InstanceMutation) AgentSecret() (r string, exists bool) {
+	v := m.agent_secret
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldAgentSecret returns the old "agent_secret" field's value of the Instance entity.
+// If the Instance object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *InstanceMutation) OldAgentSecret(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldAgentSecret is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldAgentSecret requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldAgentSecret: %w", err)
+	}
+	return oldValue.AgentSecret, nil
+}
+
+// ClearAgentSecret clears the value of the "agent_secret" field.
+func (m *InstanceMutation) ClearAgentSecret() {
+	m.agent_secret = nil
+	m.clearedFields[instance.FieldAgentSecret] = struct{}{}
+}
+
+// AgentSecretCleared returns if the "agent_secret" field was cleared in this mutation.
+func (m *InstanceMutation) AgentSecretCleared() bool {
+	_, ok := m.clearedFields[instance.FieldAgentSecret]
+	return ok
+}
+
+// ResetAgentSecret resets all changes to the "agent_secret" field.
+func (m *InstanceMutation) ResetAgentSecret() {
+	m.agent_secret = nil
+	delete(m.clearedFields, instance.FieldAgentSecret)
+}
+
 // SetLastActivityAt sets the "last_activity_at" field.
 func (m *InstanceMutation) SetLastActivityAt(t time.Time) {
 	m.last_activity_at = &t
@@ -671,7 +721,7 @@ func (m *InstanceMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *InstanceMutation) Fields() []string {
-	fields := make([]string, 0, 10)
+	fields := make([]string, 0, 11)
 	if m.provider != nil {
 		fields = append(fields, instance.FieldProvider)
 	}
@@ -692,6 +742,9 @@ func (m *InstanceMutation) Fields() []string {
 	}
 	if m.netbird_config != nil {
 		fields = append(fields, instance.FieldNetbirdConfig)
+	}
+	if m.agent_secret != nil {
+		fields = append(fields, instance.FieldAgentSecret)
 	}
 	if m.last_activity_at != nil {
 		fields = append(fields, instance.FieldLastActivityAt)
@@ -724,6 +777,8 @@ func (m *InstanceMutation) Field(name string) (ent.Value, bool) {
 		return m.VolumeID()
 	case instance.FieldNetbirdConfig:
 		return m.NetbirdConfig()
+	case instance.FieldAgentSecret:
+		return m.AgentSecret()
 	case instance.FieldLastActivityAt:
 		return m.LastActivityAt()
 	case instance.FieldCreatedAt:
@@ -753,6 +808,8 @@ func (m *InstanceMutation) OldField(ctx context.Context, name string) (ent.Value
 		return m.OldVolumeID(ctx)
 	case instance.FieldNetbirdConfig:
 		return m.OldNetbirdConfig(ctx)
+	case instance.FieldAgentSecret:
+		return m.OldAgentSecret(ctx)
 	case instance.FieldLastActivityAt:
 		return m.OldLastActivityAt(ctx)
 	case instance.FieldCreatedAt:
@@ -816,6 +873,13 @@ func (m *InstanceMutation) SetField(name string, value ent.Value) error {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
 		m.SetNetbirdConfig(v)
+		return nil
+	case instance.FieldAgentSecret:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetAgentSecret(v)
 		return nil
 	case instance.FieldLastActivityAt:
 		v, ok := value.(time.Time)
@@ -895,6 +959,9 @@ func (m *InstanceMutation) ClearedFields() []string {
 	if m.FieldCleared(instance.FieldNetbirdConfig) {
 		fields = append(fields, instance.FieldNetbirdConfig)
 	}
+	if m.FieldCleared(instance.FieldAgentSecret) {
+		fields = append(fields, instance.FieldAgentSecret)
+	}
 	if m.FieldCleared(instance.FieldLastActivityAt) {
 		fields = append(fields, instance.FieldLastActivityAt)
 	}
@@ -923,6 +990,9 @@ func (m *InstanceMutation) ClearField(name string) error {
 		return nil
 	case instance.FieldNetbirdConfig:
 		m.ClearNetbirdConfig()
+		return nil
+	case instance.FieldAgentSecret:
+		m.ClearAgentSecret()
 		return nil
 	case instance.FieldLastActivityAt:
 		m.ClearLastActivityAt()
@@ -955,6 +1025,9 @@ func (m *InstanceMutation) ResetField(name string) error {
 		return nil
 	case instance.FieldNetbirdConfig:
 		m.ResetNetbirdConfig()
+		return nil
+	case instance.FieldAgentSecret:
+		m.ResetAgentSecret()
 		return nil
 	case instance.FieldLastActivityAt:
 		m.ResetLastActivityAt()

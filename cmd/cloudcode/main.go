@@ -45,7 +45,7 @@ func main() {
 	logger.Printf("provider: %s", cfg.Provider)
 
 	// Service layer
-	instanceSvc := service.NewInstanceService(db, prov)
+	instanceSvc := service.NewInstanceService(db, prov, cfg.AnthropicAPIKey)
 
 	// Netbird (Hetzner only)
 	var cronSvc *service.CronService

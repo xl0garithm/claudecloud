@@ -21,8 +21,12 @@ RUN mkdir -p /home/claude/.config/zellij/layouts && \
 RUN cp /opt/cloudcode/start-session.sh /home/claude/start-session.sh && \
     chown claude:claude /home/claude/start-session.sh
 
-# Expose mosh UDP ports
-EXPOSE 60000-60010/udp
+# Instance agent (Node.js sidecar)
+COPY scripts/instance/agent /opt/cloudcode/agent
+RUN cd /opt/cloudcode/agent && npm install --production
+
+# Expose mosh UDP ports, ttyd, and agent
+EXPOSE 60000-60010/udp 7681 3001
 
 USER claude
 WORKDIR /claude-data

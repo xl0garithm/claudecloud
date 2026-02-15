@@ -15,7 +15,7 @@ func setupTest(t *testing.T) (*InstanceService, *ent.Client) {
 	t.Helper()
 	client := enttest.Open(t, "sqlite3", "file:ent?mode=memory&_fk=1")
 	mock := provider.NewMock()
-	svc := NewInstanceService(client, mock)
+	svc := NewInstanceService(client, mock, "")
 	return svc, client
 }
 

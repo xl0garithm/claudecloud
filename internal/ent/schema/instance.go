@@ -31,6 +31,10 @@ func (Instance) Fields() []ent.Field {
 		field.String("netbird_config").
 			Optional().
 			Comment("JSON-encoded Netbird config (group ID, route ID, policy ID, setup key ID)"),
+		field.String("agent_secret").
+			Optional().
+			Sensitive().
+			Comment("Per-instance secret for agent authentication"),
 		field.Time("last_activity_at").
 			Optional().
 			Nillable().

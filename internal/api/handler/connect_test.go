@@ -21,7 +21,7 @@ func setupConnectTest(t *testing.T) (*ConnectHandler, *service.InstanceService, 
 	t.Cleanup(func() { client.Close() })
 
 	mock := provider.NewMock()
-	svc := service.NewInstanceService(client, mock)
+	svc := service.NewInstanceService(client, mock, "")
 	ch := NewConnectHandler(svc, "test-jwt-secret")
 
 	// Create test user

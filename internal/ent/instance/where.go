@@ -90,6 +90,11 @@ func NetbirdConfig(v string) predicate.Instance {
 	return predicate.Instance(sql.FieldEQ(FieldNetbirdConfig, v))
 }
 
+// AgentSecret applies equality check predicate on the "agent_secret" field. It's identical to AgentSecretEQ.
+func AgentSecret(v string) predicate.Instance {
+	return predicate.Instance(sql.FieldEQ(FieldAgentSecret, v))
+}
+
 // LastActivityAt applies equality check predicate on the "last_activity_at" field. It's identical to LastActivityAtEQ.
 func LastActivityAt(v time.Time) predicate.Instance {
 	return predicate.Instance(sql.FieldEQ(FieldLastActivityAt, v))
@@ -573,6 +578,81 @@ func NetbirdConfigEqualFold(v string) predicate.Instance {
 // NetbirdConfigContainsFold applies the ContainsFold predicate on the "netbird_config" field.
 func NetbirdConfigContainsFold(v string) predicate.Instance {
 	return predicate.Instance(sql.FieldContainsFold(FieldNetbirdConfig, v))
+}
+
+// AgentSecretEQ applies the EQ predicate on the "agent_secret" field.
+func AgentSecretEQ(v string) predicate.Instance {
+	return predicate.Instance(sql.FieldEQ(FieldAgentSecret, v))
+}
+
+// AgentSecretNEQ applies the NEQ predicate on the "agent_secret" field.
+func AgentSecretNEQ(v string) predicate.Instance {
+	return predicate.Instance(sql.FieldNEQ(FieldAgentSecret, v))
+}
+
+// AgentSecretIn applies the In predicate on the "agent_secret" field.
+func AgentSecretIn(vs ...string) predicate.Instance {
+	return predicate.Instance(sql.FieldIn(FieldAgentSecret, vs...))
+}
+
+// AgentSecretNotIn applies the NotIn predicate on the "agent_secret" field.
+func AgentSecretNotIn(vs ...string) predicate.Instance {
+	return predicate.Instance(sql.FieldNotIn(FieldAgentSecret, vs...))
+}
+
+// AgentSecretGT applies the GT predicate on the "agent_secret" field.
+func AgentSecretGT(v string) predicate.Instance {
+	return predicate.Instance(sql.FieldGT(FieldAgentSecret, v))
+}
+
+// AgentSecretGTE applies the GTE predicate on the "agent_secret" field.
+func AgentSecretGTE(v string) predicate.Instance {
+	return predicate.Instance(sql.FieldGTE(FieldAgentSecret, v))
+}
+
+// AgentSecretLT applies the LT predicate on the "agent_secret" field.
+func AgentSecretLT(v string) predicate.Instance {
+	return predicate.Instance(sql.FieldLT(FieldAgentSecret, v))
+}
+
+// AgentSecretLTE applies the LTE predicate on the "agent_secret" field.
+func AgentSecretLTE(v string) predicate.Instance {
+	return predicate.Instance(sql.FieldLTE(FieldAgentSecret, v))
+}
+
+// AgentSecretContains applies the Contains predicate on the "agent_secret" field.
+func AgentSecretContains(v string) predicate.Instance {
+	return predicate.Instance(sql.FieldContains(FieldAgentSecret, v))
+}
+
+// AgentSecretHasPrefix applies the HasPrefix predicate on the "agent_secret" field.
+func AgentSecretHasPrefix(v string) predicate.Instance {
+	return predicate.Instance(sql.FieldHasPrefix(FieldAgentSecret, v))
+}
+
+// AgentSecretHasSuffix applies the HasSuffix predicate on the "agent_secret" field.
+func AgentSecretHasSuffix(v string) predicate.Instance {
+	return predicate.Instance(sql.FieldHasSuffix(FieldAgentSecret, v))
+}
+
+// AgentSecretIsNil applies the IsNil predicate on the "agent_secret" field.
+func AgentSecretIsNil() predicate.Instance {
+	return predicate.Instance(sql.FieldIsNull(FieldAgentSecret))
+}
+
+// AgentSecretNotNil applies the NotNil predicate on the "agent_secret" field.
+func AgentSecretNotNil() predicate.Instance {
+	return predicate.Instance(sql.FieldNotNull(FieldAgentSecret))
+}
+
+// AgentSecretEqualFold applies the EqualFold predicate on the "agent_secret" field.
+func AgentSecretEqualFold(v string) predicate.Instance {
+	return predicate.Instance(sql.FieldEqualFold(FieldAgentSecret, v))
+}
+
+// AgentSecretContainsFold applies the ContainsFold predicate on the "agent_secret" field.
+func AgentSecretContainsFold(v string) predicate.Instance {
+	return predicate.Instance(sql.FieldContainsFold(FieldAgentSecret, v))
 }
 
 // LastActivityAtEQ applies the EQ predicate on the "last_activity_at" field.

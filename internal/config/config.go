@@ -37,6 +37,9 @@ type Config struct {
 	StripeWebhookSecret string
 	StripePriceStarter  string
 	StripePricePro      string
+
+	// Anthropic
+	AnthropicAPIKey string
 }
 
 // Load reads configuration from environment variables with sensible defaults.
@@ -69,6 +72,8 @@ func Load() *Config {
 		StripeWebhookSecret: os.Getenv("STRIPE_WEBHOOK_SECRET"),
 		StripePriceStarter:  os.Getenv("STRIPE_PRICE_STARTER"),
 		StripePricePro:      os.Getenv("STRIPE_PRICE_PRO"),
+
+		AnthropicAPIKey: os.Getenv("ANTHROPIC_API_KEY"),
 	}
 }
 

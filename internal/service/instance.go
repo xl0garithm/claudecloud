@@ -2,6 +2,8 @@ package service
 
 import (
 	"context"
+	"crypto/rand"
+	"encoding/hex"
 	"errors"
 	"fmt"
 	"strconv"
@@ -14,14 +16,15 @@ import (
 
 // InstanceService bridges HTTP handlers with the provider and database.
 type InstanceService struct {
-	db       *ent.Client
-	provider provider.Provisioner
-	netbird  *NetbirdService // nil when PROVIDER=docker
+	db              *ent.Client
+	provider        provider.Provisioner
+	netbird         *NetbirdService // nil when PROVIDER=docker
+	anthropicAPIKey string
 }
 
 // NewInstanceService creates a new InstanceService.
-func NewInstanceService(db *ent.Client, prov provider.Provisioner) *InstanceService {
-	return &InstanceService{db: db, provider: prov}
+func NewInstanceService(db *ent.Client, prov provider.Provisioner, anthropicAPIKey string) *InstanceService {
+	return &InstanceService{db: db, provider: prov, anthropicAPIKey: anthropicAPIKey}
 }
 
 // SetNetbirdService wires in the optional Netbird service for Hetzner mode.
@@ -78,7 +81,16 @@ func (s *InstanceService) Create(ctx context.Context, userID int) (*InstanceResp
 		return nil, provider.ErrAlreadyExists
 	}
 
+	// Generate per-instance agent secret
+	secretBytes := make([]byte, 32)
+	if _, err := rand.Read(secretBytes); err != nil {
+		return nil, fmt.Errorf("generate agent secret: %w", err)
+	}
+	agentSecret := hex.EncodeToString(secretBytes)
+
 	var opts provider.CreateOptions
+	opts.AgentSecret = agentSecret
+	opts.AnthropicAPIKey = s.anthropicAPIKey
 	var prep *NetbirdPrep
 
 	// Phase 1: Prepare Netbird access (Hetzner only)
@@ -116,6 +128,7 @@ func (s *InstanceService) Create(ctx context.Context, userID int) (*InstanceResp
 		SetPort(provInst.Port).
 		SetStatus(string(provInst.Status)).
 		SetVolumeID(provInst.VolumeID).
+		SetAgentSecret(agentSecret).
 		SetOwnerID(userID)
 
 	if netbirdConfigStr != "" {
@@ -288,6 +301,24 @@ func (s *InstanceService) GetConnectInfo(ctx context.Context, userID int) (*Conn
 		NetbirdConfig: inst.NetbirdConfig,
 		UserID:        owner.ID,
 	}, nil
+}
+
+// GetInstanceHost returns the host and agent secret for an instance, verifying user ownership.
+func (s *InstanceService) GetInstanceHost(ctx context.Context, id int, userID int) (host string, agentSecret string, err error) {
+	inst, err := s.db.Instance.Query().
+		Where(
+			entinstance.IDEQ(id),
+			entinstance.HasOwnerWith(entuser.IDEQ(userID)),
+			entinstance.StatusIn("running"),
+		).
+		Only(ctx)
+	if err != nil {
+		if ent.IsNotFound(err) {
+			return "", "", provider.ErrNotFound
+		}
+		return "", "", fmt.Errorf("query instance host: %w", err)
+	}
+	return inst.Host, inst.AgentSecret, nil
 }
 
 // ParseID converts a string ID from URL params to int.

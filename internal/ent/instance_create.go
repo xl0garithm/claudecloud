@@ -103,6 +103,20 @@ func (_c *InstanceCreate) SetNillableNetbirdConfig(v *string) *InstanceCreate {
 	return _c
 }
 
+// SetAgentSecret sets the "agent_secret" field.
+func (_c *InstanceCreate) SetAgentSecret(v string) *InstanceCreate {
+	_c.mutation.SetAgentSecret(v)
+	return _c
+}
+
+// SetNillableAgentSecret sets the "agent_secret" field if the given value is not nil.
+func (_c *InstanceCreate) SetNillableAgentSecret(v *string) *InstanceCreate {
+	if v != nil {
+		_c.SetAgentSecret(*v)
+	}
+	return _c
+}
+
 // SetLastActivityAt sets the "last_activity_at" field.
 func (_c *InstanceCreate) SetLastActivityAt(v time.Time) *InstanceCreate {
 	_c.mutation.SetLastActivityAt(v)
@@ -288,6 +302,10 @@ func (_c *InstanceCreate) createSpec() (*Instance, *sqlgraph.CreateSpec) {
 	if value, ok := _c.mutation.NetbirdConfig(); ok {
 		_spec.SetField(instance.FieldNetbirdConfig, field.TypeString, value)
 		_node.NetbirdConfig = value
+	}
+	if value, ok := _c.mutation.AgentSecret(); ok {
+		_spec.SetField(instance.FieldAgentSecret, field.TypeString, value)
+		_node.AgentSecret = value
 	}
 	if value, ok := _c.mutation.LastActivityAt(); ok {
 		_spec.SetField(instance.FieldLastActivityAt, field.TypeTime, value)

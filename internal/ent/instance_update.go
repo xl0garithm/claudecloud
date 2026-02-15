@@ -158,6 +158,26 @@ func (_u *InstanceUpdate) ClearNetbirdConfig() *InstanceUpdate {
 	return _u
 }
 
+// SetAgentSecret sets the "agent_secret" field.
+func (_u *InstanceUpdate) SetAgentSecret(v string) *InstanceUpdate {
+	_u.mutation.SetAgentSecret(v)
+	return _u
+}
+
+// SetNillableAgentSecret sets the "agent_secret" field if the given value is not nil.
+func (_u *InstanceUpdate) SetNillableAgentSecret(v *string) *InstanceUpdate {
+	if v != nil {
+		_u.SetAgentSecret(*v)
+	}
+	return _u
+}
+
+// ClearAgentSecret clears the value of the "agent_secret" field.
+func (_u *InstanceUpdate) ClearAgentSecret() *InstanceUpdate {
+	_u.mutation.ClearAgentSecret()
+	return _u
+}
+
 // SetLastActivityAt sets the "last_activity_at" field.
 func (_u *InstanceUpdate) SetLastActivityAt(v time.Time) *InstanceUpdate {
 	_u.mutation.SetLastActivityAt(v)
@@ -307,6 +327,12 @@ func (_u *InstanceUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 	}
 	if _u.mutation.NetbirdConfigCleared() {
 		_spec.ClearField(instance.FieldNetbirdConfig, field.TypeString)
+	}
+	if value, ok := _u.mutation.AgentSecret(); ok {
+		_spec.SetField(instance.FieldAgentSecret, field.TypeString, value)
+	}
+	if _u.mutation.AgentSecretCleared() {
+		_spec.ClearField(instance.FieldAgentSecret, field.TypeString)
 	}
 	if value, ok := _u.mutation.LastActivityAt(); ok {
 		_spec.SetField(instance.FieldLastActivityAt, field.TypeTime, value)
@@ -495,6 +521,26 @@ func (_u *InstanceUpdateOne) ClearNetbirdConfig() *InstanceUpdateOne {
 	return _u
 }
 
+// SetAgentSecret sets the "agent_secret" field.
+func (_u *InstanceUpdateOne) SetAgentSecret(v string) *InstanceUpdateOne {
+	_u.mutation.SetAgentSecret(v)
+	return _u
+}
+
+// SetNillableAgentSecret sets the "agent_secret" field if the given value is not nil.
+func (_u *InstanceUpdateOne) SetNillableAgentSecret(v *string) *InstanceUpdateOne {
+	if v != nil {
+		_u.SetAgentSecret(*v)
+	}
+	return _u
+}
+
+// ClearAgentSecret clears the value of the "agent_secret" field.
+func (_u *InstanceUpdateOne) ClearAgentSecret() *InstanceUpdateOne {
+	_u.mutation.ClearAgentSecret()
+	return _u
+}
+
 // SetLastActivityAt sets the "last_activity_at" field.
 func (_u *InstanceUpdateOne) SetLastActivityAt(v time.Time) *InstanceUpdateOne {
 	_u.mutation.SetLastActivityAt(v)
@@ -674,6 +720,12 @@ func (_u *InstanceUpdateOne) sqlSave(ctx context.Context) (_node *Instance, err 
 	}
 	if _u.mutation.NetbirdConfigCleared() {
 		_spec.ClearField(instance.FieldNetbirdConfig, field.TypeString)
+	}
+	if value, ok := _u.mutation.AgentSecret(); ok {
+		_spec.SetField(instance.FieldAgentSecret, field.TypeString, value)
+	}
+	if _u.mutation.AgentSecretCleared() {
+		_spec.ClearField(instance.FieldAgentSecret, field.TypeString)
 	}
 	if value, ok := _u.mutation.LastActivityAt(); ok {
 		_spec.SetField(instance.FieldLastActivityAt, field.TypeTime, value)

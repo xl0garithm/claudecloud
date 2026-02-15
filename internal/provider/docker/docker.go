@@ -68,10 +68,20 @@ func (p *Provider) Create(ctx context.Context, userID int, opts provider.CreateO
 		return nil, fmt.Errorf("ensure volume: %w", err)
 	}
 
+	// Build env vars for the container
+	var envVars []string
+	if opts.AgentSecret != "" {
+		envVars = append(envVars, "AGENT_SECRET="+opts.AgentSecret)
+	}
+	if opts.AnthropicAPIKey != "" {
+		envVars = append(envVars, "ANTHROPIC_API_KEY="+opts.AnthropicAPIKey)
+	}
+
 	// Create container
 	resp, err := p.cli.ContainerCreate(ctx,
 		&container.Config{
 			Image: imageTag,
+			Env:   envVars,
 			Labels: map[string]string{
 				labelPrefix + "managed": "true",
 				labelPrefix + "user_id": strconv.Itoa(userID),
@@ -203,7 +213,7 @@ func (p *Provider) Wake(ctx context.Context, instanceID string) error {
 }
 
 // Activity checks if the container has active processes beyond the base set.
-// Docker: active if process count > 3 (entrypoint + tail + zellij).
+// Docker: active if process count > 6 (entrypoint + tail + zellij + ttyd + node agent + shell).
 func (p *Provider) Activity(ctx context.Context, instanceID string) (*provider.ActivityInfo, error) {
 	top, err := p.cli.ContainerTop(ctx, instanceID, nil)
 	if err != nil {
@@ -215,7 +225,7 @@ func (p *Provider) Activity(ctx context.Context, instanceID string) (*provider.A
 
 	processCount := len(top.Processes)
 	return &provider.ActivityInfo{
-		IsActive:     processCount > 3,
+		IsActive:     processCount > 6,
 		ProcessCount: processCount,
 	}, nil
 }

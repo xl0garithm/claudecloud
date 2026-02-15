@@ -28,6 +28,8 @@ const (
 	FieldVolumeID = "volume_id"
 	// FieldNetbirdConfig holds the string denoting the netbird_config field in the database.
 	FieldNetbirdConfig = "netbird_config"
+	// FieldAgentSecret holds the string denoting the agent_secret field in the database.
+	FieldAgentSecret = "agent_secret"
 	// FieldLastActivityAt holds the string denoting the last_activity_at field in the database.
 	FieldLastActivityAt = "last_activity_at"
 	// FieldCreatedAt holds the string denoting the created_at field in the database.
@@ -57,6 +59,7 @@ var Columns = []string{
 	FieldStatus,
 	FieldVolumeID,
 	FieldNetbirdConfig,
+	FieldAgentSecret,
 	FieldLastActivityAt,
 	FieldCreatedAt,
 	FieldUpdatedAt,
@@ -139,6 +142,11 @@ func ByVolumeID(opts ...sql.OrderTermOption) OrderOption {
 // ByNetbirdConfig orders the results by the netbird_config field.
 func ByNetbirdConfig(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldNetbirdConfig, opts...).ToFunc()
+}
+
+// ByAgentSecret orders the results by the agent_secret field.
+func ByAgentSecret(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldAgentSecret, opts...).ToFunc()
 }
 
 // ByLastActivityAt orders the results by the last_activity_at field.

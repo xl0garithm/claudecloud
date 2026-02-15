@@ -66,6 +66,16 @@ cat > /home/claude/.config/claude/settings.json <<'SETTINGS'
 SETTINGS
 chown -R claude:claude /home/claude/.config
 
+# ttyd (web terminal)
+if ! command -v ttyd &>/dev/null; then
+    echo "Installing ttyd..."
+    curl -fsSL https://github.com/tsl0922/ttyd/releases/latest/download/ttyd.x86_64 \
+        -o /usr/local/bin/ttyd
+    chmod +x /usr/local/bin/ttyd
+else
+    echo "ttyd already installed."
+fi
+
 # Volume mount point
 mkdir -p /claude-data
 chown claude:claude /claude-data
