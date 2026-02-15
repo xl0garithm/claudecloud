@@ -34,6 +34,9 @@ dev: image-build
 dev-down:
 	docker compose down
 
+dev-web:
+	cd web && npm run dev
+
 e2e:
 	./scripts/e2e-test.sh
 

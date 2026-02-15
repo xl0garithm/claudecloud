@@ -26,11 +26,25 @@ services:
       DATABASE_URL: postgres://cloudcode:cloudcode@postgres:5432/cloudcode?sslmode=disable
       API_KEY: dev-api-key
       LISTEN_ADDR: ":8080"
+      JWT_SECRET: dev-jwt-secret-change-in-production
+      BASE_URL: http://localhost:8080
+      FRONTEND_URL: http://localhost:3000
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
     depends_on:
       postgres:
         condition: service_healthy
+
+  web:
+    build:
+      context: ./web
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    environment:
+      NEXT_PUBLIC_API_URL: http://localhost:8080
+    depends_on:
+      - api
 
 volumes:
   pgdata:
