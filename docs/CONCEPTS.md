@@ -186,3 +186,60 @@ The dashboard layout includes an auth guard that redirects to login if `/auth/me
 The `scripts/claude-cloud` script provides `login`, `verify`, `connect`, `status`, and `logout` commands. After magic link verification, the session JWT is stored in `~/.claude-cloud/token`. The `connect` command sends the stored token as a `Bearer` header to `/connect.sh`, which returns a provider-specific connection script.
 
 The connect endpoint (`/connect.sh`) was upgraded to support three auth methods: Bearer JWT, session cookie, and `?user_id` parameter (legacy). This means the CLI, the browser dashboard, and the original curl-based flow all work with the same endpoint.
+
+---
+
+## Phase 4: UI Layer — Web Terminal, Chat UI, Projects
+
+### Instance Agent (Node.js Sidecar)
+
+**Pattern**: Run a lightweight Node.js server on each instance to expose chat, file, and project APIs.
+
+Each instance runs an Express + WebSocket server on port 3001 (`scripts/instance/agent/`). It provides:
+- `WS /chat` — Claude Code SDK streaming via `@anthropic-ai/claude-code`
+- `GET /files` — Directory listing within `/claude-data/`
+- `GET /files/read` — File content with 1MB truncation
+- `GET /projects` — Scans for `.git` directories up to 3 levels deep
+- `POST /projects/clone` — Runs `git clone` in `/claude-data/`
+
+Auth uses a per-instance random secret (`AGENT_SECRET` env var). The Go API stores this secret in the database and includes it when proxying requests. All file operations are restricted to `/claude-data/` via path validation (`safePath` function that resolves and checks the prefix).
+
+### ttyd Web Terminal
+
+**Pattern**: Use ttyd (a proven terminal-over-WebSocket tool) for browser-based shell access.
+
+ttyd runs on each instance at port 7681, wrapping `zellij attach claude --create`. It uses a binary WebSocket protocol where the first byte indicates message type: 0 = terminal output/input, 1 = resize, 2 = preferences. The Go API proxies the WebSocket connection to ttyd, and the frontend uses xterm.js to render the terminal.
+
+The xterm.js component (`WebTerminal.tsx`) handles the ttyd protocol encoding/decoding, auto-fits to the container size, and provides connection status display with a reconnect button.
+
+### WebSocket Proxy (Go API)
+
+**Pattern**: Centralized JWT auth for all instance access — the Go API proxies WebSocket and HTTP connections.
+
+The `ProxyHandler` in `internal/api/handler/proxy.go` handles six proxy routes, all under `/instances/{id}/`. For WebSocket endpoints (terminal, chat), it upgrades the client connection, verifies JWT auth and instance ownership, then opens a backend WebSocket and bidirectionally copies messages. For HTTP endpoints (files, projects), it uses `httputil.ReverseProxy`.
+
+JWT auth for WebSocket connections uses a `?token=` query parameter fallback since browsers can't set custom headers on WebSocket upgrade requests. The `extractUserID` method checks both the context (from middleware) and the query parameter.
+
+Instance ownership verification happens in `GetInstanceHost`, which queries for an instance matching both the ID and the requesting user's ID. This prevents users from accessing other users' instances.
+
+### Agent SDK Chat Integration
+
+**Pattern**: Wrap the Claude Code Agent SDK in a streaming WebSocket interface.
+
+The `chat.js` module uses `@anthropic-ai/claude-code`'s `query()` function as an async generator. Each response event (text, tool_use, tool_result, done) is mapped to a JSON message and sent over the WebSocket. The client accumulates text chunks into a single assistant message and tracks tool events in a separate array.
+
+The chat page (`chat/page.tsx`) manages WebSocket state, message history, and streaming state. It uses refs for accumulating in-flight text and tool events to avoid stale closure issues in the WebSocket message handler. A `Suspense` boundary wraps the page because `useSearchParams()` requires it in Next.js App Router.
+
+### Dashboard Navigation (Tab-Based Layout)
+
+**Pattern**: Add navigation tabs to the dashboard layout for multi-page navigation.
+
+The dashboard layout (`app/dashboard/layout.tsx`) renders four tabs: Overview, Terminal, Chat, and Projects. Active tab detection uses `usePathname()` — the Overview tab is exact-match, others use `startsWith`. Each tab links to a sub-route under `/dashboard/`.
+
+### Projects as Filesystem (No Separate Entity)
+
+**Pattern**: The instance filesystem is the source of truth for projects — no database entity needed.
+
+The instance agent scans `/claude-data/` for `.git` directories (up to 3 levels deep) and reads the git remote URL from `.git/config`. Each project is returned as `{ name, path, remoteUrl }`. The "Open in Chat" button navigates to `/dashboard/chat?cwd={path}`, which sets the Claude Code working directory.
+
+This approach avoids syncing project metadata between the database and filesystem. The instance always reports its current state, and clone operations are idempotent (git clone will fail if the directory already exists, giving the user a clear error).
