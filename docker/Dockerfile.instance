@@ -1,0 +1,48 @@
+FROM ubuntu:24.04
+
+ENV DEBIAN_FRONTEND=noninteractive
+
+# Base packages
+RUN apt-get update && apt-get install -y \
+    curl \
+    git \
+    sudo \
+    locales \
+    ca-certificates \
+    && rm -rf /var/lib/apt/lists/*
+
+# Locale
+RUN locale-gen en_US.UTF-8
+ENV LANG=en_US.UTF-8
+
+# Node.js 20 (for Claude Code)
+RUN curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
+    && apt-get install -y nodejs \
+    && rm -rf /var/lib/apt/lists/*
+
+# Claude Code
+RUN npm install -g @anthropic-ai/claude-code
+
+# Zellij
+RUN curl -fsSL https://github.com/zellij-org/zellij/releases/latest/download/zellij-x86_64-unknown-linux-musl.tar.gz \
+    | tar -xz -C /usr/local/bin
+
+# Create claude user
+RUN useradd -m -s /bin/bash claude \
+    && echo "claude ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers
+
+# Claude Code config: dangerously-approve-all
+RUN mkdir -p /home/claude/.config/claude && \
+    echo '{"autoApprove": true, "dangerouslyApproveAll": true}' > /home/claude/.config/claude/settings.json && \
+    chown -R claude:claude /home/claude/.config
+
+# Volume mount point
+RUN mkdir -p /claude-data && chown claude:claude /claude-data
+
+COPY entrypoint.sh /entrypoint.sh
+RUN chmod +x /entrypoint.sh
+
+USER claude
+WORKDIR /claude-data
+
+ENTRYPOINT ["/entrypoint.sh"]
