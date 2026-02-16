@@ -19,9 +19,8 @@ export default function DashboardPage() {
       // Try to load usage
       api.getUsage().then(setUsage).catch(() => {});
 
-      // Try to get user's instance (if any)
-      // The API returns instances by ID, but we need to find the user's instance
-      // For now, we'll handle this via the user's instance info
+      // Load user's instance (if any)
+      api.getMyInstance().then(setInstance).catch(() => {});
     } catch {
       setError("Failed to load data");
     }
