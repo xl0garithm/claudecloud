@@ -6,6 +6,10 @@ import (
 	"fmt"
 	"log/slog"
 
+	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/attribute"
+	otelTrace "go.opentelemetry.io/otel/trace"
+
 	"github.com/stripe/stripe-go/v82"
 	portalsession "github.com/stripe/stripe-go/v82/billingportal/session"
 	"github.com/stripe/stripe-go/v82/checkout/session"
@@ -57,8 +61,14 @@ type UsageSummary struct {
 	UsageHours         float64 `json:"usage_hours"`
 }
 
+var billingTracer = otel.Tracer("cloudcode/service/billing")
+
 // CreateCheckoutSession creates a Stripe Checkout session for the given user and plan.
 func (s *BillingService) CreateCheckoutSession(ctx context.Context, userID int, plan string) (string, error) {
+	ctx, span := billingTracer.Start(ctx, "billing.checkout",
+		otelTrace.WithAttributes(attribute.Int("user_id", userID), attribute.String("plan", plan)))
+	defer span.End()
+
 	u, err := s.db.User.Get(ctx, userID)
 	if err != nil {
 		return "", fmt.Errorf("get user: %w", err)
@@ -154,6 +164,10 @@ func (s *BillingService) GetBillingPortalURL(ctx context.Context, userID int) (s
 
 // HandleWebhookEvent verifies and processes a Stripe webhook event.
 func (s *BillingService) HandleWebhookEvent(payload []byte, sigHeader string) error {
+	ctx, span := billingTracer.Start(context.Background(), "billing.webhook")
+	defer span.End()
+	_ = ctx
+
 	event, err := webhook.ConstructEvent(payload, sigHeader, s.webhookSecret)
 	if err != nil {
 		return fmt.Errorf("verify signature: %w", err)

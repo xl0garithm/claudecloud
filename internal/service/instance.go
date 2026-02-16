@@ -8,11 +8,18 @@ import (
 	"fmt"
 	"strconv"
 
+	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/codes"
+	otelTrace "go.opentelemetry.io/otel/trace"
+
 	"github.com/logan/cloudcode/internal/ent"
 	entinstance "github.com/logan/cloudcode/internal/ent/instance"
 	entuser "github.com/logan/cloudcode/internal/ent/user"
 	"github.com/logan/cloudcode/internal/provider"
 )
+
+var tracer = otel.Tracer("cloudcode/service/instance")
 
 // InstanceService bridges HTTP handlers with the provider and database.
 type InstanceService struct {
@@ -67,6 +74,10 @@ type ConnectInfo struct {
 
 // Create provisions a new instance for the given user.
 func (s *InstanceService) Create(ctx context.Context, userID int) (*InstanceResponse, error) {
+	ctx, span := tracer.Start(ctx, "instance.create",
+		otelTrace.WithAttributes(attribute.Int("user_id", userID)))
+	defer span.End()
+
 	// Check for existing active instance
 	exists, err := s.db.Instance.Query().
 		Where(
@@ -139,9 +150,12 @@ func (s *InstanceService) Create(ctx context.Context, userID int) (*InstanceResp
 	if err != nil {
 		// Best-effort cleanup on DB failure
 		_ = s.provider.Destroy(ctx, provInst.ID)
+		span.RecordError(err)
+		span.SetStatus(codes.Error, "save instance failed")
 		return nil, fmt.Errorf("save instance: %w", err)
 	}
 
+	span.SetAttributes(attribute.Int("instance_id", inst.ID), attribute.String("provider", inst.Provider))
 	return toResponse(inst), nil
 }
 
@@ -168,6 +182,10 @@ func (s *InstanceService) Get(ctx context.Context, id int) (*InstanceResponse, e
 
 // Delete destroys the instance.
 func (s *InstanceService) Delete(ctx context.Context, id int) error {
+	ctx, span := tracer.Start(ctx, "instance.delete",
+		otelTrace.WithAttributes(attribute.Int("instance_id", id)))
+	defer span.End()
+
 	inst, err := s.db.Instance.Get(ctx, id)
 	if err != nil {
 		if ent.IsNotFound(err) {
@@ -200,6 +218,10 @@ func (s *InstanceService) Delete(ctx context.Context, id int) error {
 
 // Pause pauses the instance.
 func (s *InstanceService) Pause(ctx context.Context, id int) error {
+	ctx, span := tracer.Start(ctx, "instance.pause",
+		otelTrace.WithAttributes(attribute.Int("instance_id", id)))
+	defer span.End()
+
 	inst, err := s.db.Instance.Get(ctx, id)
 	if err != nil {
 		if ent.IsNotFound(err) {
@@ -222,6 +244,10 @@ func (s *InstanceService) Pause(ctx context.Context, id int) error {
 
 // Wake wakes a paused instance.
 func (s *InstanceService) Wake(ctx context.Context, id int) error {
+	ctx, span := tracer.Start(ctx, "instance.wake",
+		otelTrace.WithAttributes(attribute.Int("instance_id", id)))
+	defer span.End()
+
 	inst, err := s.db.Instance.Get(ctx, id)
 	if err != nil {
 		if ent.IsNotFound(err) {

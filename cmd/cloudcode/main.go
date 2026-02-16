@@ -19,6 +19,7 @@ import (
 	"github.com/logan/cloudcode/internal/netbird"
 	"github.com/logan/cloudcode/internal/provider/factory"
 	"github.com/logan/cloudcode/internal/service"
+	"github.com/logan/cloudcode/internal/telemetry"
 )
 
 // version is set by -ldflags at build time.
@@ -42,6 +43,14 @@ func main() {
 		handler = slog.NewTextHandler(os.Stdout, nil)
 	}
 	logger := slog.New(handler)
+
+	// OpenTelemetry
+	otelShutdown, err := telemetry.Init(context.Background(), "cloudcode", version, cfg.Environment, cfg.OTELEndpoint)
+	if err != nil {
+		logger.Error("failed to initialize telemetry", "error", err)
+		os.Exit(1)
+	}
+	defer otelShutdown(context.Background())
 
 	// Database
 	sqlDB, err := sql.Open("postgres", cfg.DatabaseURL)
@@ -141,6 +150,7 @@ func main() {
 		Billing:  billingSvc,
 		DB:       sqlDB,
 		Version:  version,
+		Logger:   logger,
 	}
 	router := api.NewRouter(cfg, svcs)
 

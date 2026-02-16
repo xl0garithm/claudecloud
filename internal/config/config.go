@@ -45,6 +45,9 @@ type Config struct {
 
 	// Anthropic
 	AnthropicAPIKey string
+
+	// OpenTelemetry
+	OTELEndpoint string // OTLP HTTP endpoint (empty = no export in dev)
 }
 
 // Load reads configuration from environment variables with sensible defaults.
@@ -80,6 +83,8 @@ func Load() *Config {
 		StripePricePro:      os.Getenv("STRIPE_PRICE_PRO"),
 
 		AnthropicAPIKey: os.Getenv("ANTHROPIC_API_KEY"),
+
+		OTELEndpoint: os.Getenv("OTEL_EXPORTER_OTLP_ENDPOINT"),
 	}
 }
 

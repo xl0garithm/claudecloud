@@ -8,12 +8,16 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"github.com/gorilla/websocket"
+	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/attribute"
 
 	"github.com/logan/cloudcode/internal/api/middleware"
 	"github.com/logan/cloudcode/internal/api/response"
 	"github.com/logan/cloudcode/internal/auth"
 	"github.com/logan/cloudcode/internal/service"
 )
+
+var proxyTracer = otel.Tracer("cloudcode/handler/proxy")
 
 // ProxyHandler proxies requests to instance ttyd and agent services.
 type ProxyHandler struct {
@@ -69,10 +73,14 @@ func (h *ProxyHandler) resolveInstance(w http.ResponseWriter, r *http.Request) (
 
 // Terminal proxies WebSocket connections to ttyd (port 7681).
 func (h *ProxyHandler) Terminal(w http.ResponseWriter, r *http.Request) {
+	_, span := proxyTracer.Start(r.Context(), "proxy.terminal")
+	defer span.End()
+
 	host, _, ok := h.resolveInstance(w, r)
 	if !ok {
 		return
 	}
+	span.SetAttributes(attribute.String("host", host))
 
 	// Upgrade client connection
 	clientConn, err := upgrader.Upgrade(w, r, nil)
@@ -123,10 +131,14 @@ func (h *ProxyHandler) Terminal(w http.ResponseWriter, r *http.Request) {
 
 // Chat proxies WebSocket connections to the instance agent chat (port 3001).
 func (h *ProxyHandler) Chat(w http.ResponseWriter, r *http.Request) {
+	_, span := proxyTracer.Start(r.Context(), "proxy.chat")
+	defer span.End()
+
 	host, agentSecret, ok := h.resolveInstance(w, r)
 	if !ok {
 		return
 	}
+	span.SetAttributes(attribute.String("host", host))
 
 	clientConn, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
@@ -196,10 +208,14 @@ func (h *ProxyHandler) ProjectsClone(w http.ResponseWriter, r *http.Request) {
 
 // proxyHTTP is a helper that reverse-proxies an HTTP request to the instance agent.
 func (h *ProxyHandler) proxyHTTP(w http.ResponseWriter, r *http.Request, agentPath string) {
+	_, span := proxyTracer.Start(r.Context(), "proxy.files")
+	defer span.End()
+
 	host, agentSecret, ok := h.resolveInstance(w, r)
 	if !ok {
 		return
 	}
+	span.SetAttributes(attribute.String("host", host), attribute.String("path", agentPath))
 
 	target, _ := url.Parse("http://" + host + ":3001")
 	proxy := httputil.NewSingleHostReverseProxy(target)

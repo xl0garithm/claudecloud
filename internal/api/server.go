@@ -2,10 +2,12 @@ package api
 
 import (
 	"database/sql"
+	"log/slog"
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
 	chimiddleware "github.com/go-chi/chi/v5/middleware"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 
 	"github.com/logan/cloudcode/internal/api/handler"
 	"github.com/logan/cloudcode/internal/api/middleware"
@@ -18,8 +20,9 @@ type Services struct {
 	Instance *service.InstanceService
 	Auth     *service.AuthService
 	Billing  *service.BillingService // nil if Stripe not configured
-	DB       *sql.DB
-	Version  string
+	DB      *sql.DB
+	Version string
+	Logger  *slog.Logger
 }
 
 // NewRouter creates the Chi router with all routes and middleware.
@@ -27,11 +30,15 @@ func NewRouter(cfg *config.Config, svcs *Services) http.Handler {
 	r := chi.NewRouter()
 
 	// Global middleware
+	r.Use(middleware.OTELHttp("cloudcode"))
 	r.Use(chimiddleware.RequestID)
 	r.Use(chimiddleware.Logger)
 	r.Use(chimiddleware.Recoverer)
 	r.Use(middleware.Security(cfg.BaseURL))
 	r.Use(middleware.BodyLimit(1 << 20)) // 1MB
+	if svcs.Logger != nil {
+		r.Use(middleware.TraceLog(svcs.Logger))
+	}
 
 	if cfg.FrontendURL != "" {
 		r.Use(middleware.CORS(cfg.FrontendURL))
@@ -39,6 +46,9 @@ func NewRouter(cfg *config.Config, svcs *Services) http.Handler {
 
 	// Health check (no auth)
 	r.Get("/healthz", handler.Health(svcs.DB, svcs.Version))
+
+	// Prometheus metrics (no auth)
+	r.Handle("/metrics", promhttp.Handler())
 
 	// Connect script (no user auth — supports Bearer, cookie, or ?user_id)
 	ch := handler.NewConnectHandler(svcs.Instance, cfg.JWTSecret)

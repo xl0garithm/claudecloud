@@ -31,6 +31,7 @@ services:
       BASE_URL: http://localhost:8080
       FRONTEND_URL: http://localhost:3000
       ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+      OTEL_EXPORTER_OTLP_ENDPOINT: ${OTEL_EXPORTER_OTLP_ENDPOINT:-}
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
     networks:

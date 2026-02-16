@@ -6,10 +6,17 @@ import (
 	"sync"
 	"time"
 
+	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/metric"
+
 	"github.com/logan/cloudcode/internal/ent"
 	entinstance "github.com/logan/cloudcode/internal/ent/instance"
 	"github.com/logan/cloudcode/internal/provider"
 )
+
+var activityTracer = otel.Tracer("cloudcode/service/activity")
+var meter = otel.Meter("cloudcode/service/activity")
 
 // ActivityService polls running instances and auto-pauses idle ones.
 type ActivityService struct {
@@ -77,6 +84,9 @@ func (a *ActivityService) run() {
 }
 
 func (a *ActivityService) checkAll(ctx context.Context) {
+	ctx, span := activityTracer.Start(ctx, "activity.check_all")
+	defer span.End()
+
 	// Find all running instances
 	instances, err := a.db.Instance.Query().
 		Where(entinstance.StatusEQ("running")).
@@ -86,9 +96,20 @@ func (a *ActivityService) checkAll(ctx context.Context) {
 		return
 	}
 
+	span.SetAttributes(attribute.Int("instance_count", len(instances)))
+
 	now := time.Now()
+	activeCount := 0
 	for _, inst := range instances {
 		a.checkInstance(ctx, inst, now)
+	}
+
+	// Update OTEL metrics
+	if totalGauge, err := meter.Int64UpDownCounter("cloudcode.instances.total"); err == nil {
+		totalGauge.Add(ctx, 0, metric.WithAttributes(attribute.String("status", "running")))
+	}
+	if activeGauge, err := meter.Int64Gauge("cloudcode.instances.active"); err == nil {
+		activeGauge.Record(ctx, int64(activeCount))
 	}
 }
 
