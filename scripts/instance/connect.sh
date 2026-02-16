@@ -1,20 +1,20 @@
 #!/bin/bash
 # Connect to the persistent Zellij session.
-# Called by ttyd for each browser connection. The Zellij server is managed
-# by supervisor.sh and runs independently — this script just attaches a client.
-# When the browser disconnects, only this client exits; the server and all
-# running processes (including Claude) continue working in the background.
+# Called by ttyd for each browser connection. Handles two cases:
+#   1. Session exists → attach to it (subsequent connections)
+#   2. Session doesn't exist → create it with the Claude layout (first connection)
+#
+# When the browser disconnects, only the Zellij client exits; the server and
+# all running processes (including Claude) continue working in the background.
 
 SESSION="main"
+LAYOUT="/home/claude/.config/zellij/layouts/claude.kdl"
 
-# Wait for the session to be ready (race on container startup)
-for i in $(seq 1 10); do
-    if zellij list-sessions 2>/dev/null | grep -q "^${SESSION}"; then
-        exec zellij attach "${SESSION}"
-    fi
-    sleep 1
-done
+# Check if the session already exists
+if zellij list-sessions 2>/dev/null | grep -q "^${SESSION}"; then
+    exec zellij attach "${SESSION}"
+fi
 
-# If session still doesn't exist after 10s, show an error
-echo "Error: Zellij session '${SESSION}' not found. Check supervisor logs."
-sleep 5
+# Session doesn't exist — create it with the layout.
+# Zellij forks a server process that persists after this client exits.
+exec zellij --session "${SESSION}" --layout "${LAYOUT}"

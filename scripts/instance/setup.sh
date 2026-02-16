@@ -90,13 +90,8 @@ fi
 mkdir -p /claude-data
 chown claude:claude /claude-data
 
-# Copy session scripts to claude home
+# Copy scripts to claude home
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
-if [ -f "$SCRIPT_DIR/start-session.sh" ]; then
-    cp "$SCRIPT_DIR/start-session.sh" /home/claude/start-session.sh
-    chmod +x /home/claude/start-session.sh
-    chown claude:claude /home/claude/start-session.sh
-fi
 if [ -f "$SCRIPT_DIR/claude-layout.kdl" ]; then
     mkdir -p /home/claude/.config/zellij/layouts
     cp "$SCRIPT_DIR/claude-layout.kdl" /home/claude/.config/zellij/layouts/claude.kdl
