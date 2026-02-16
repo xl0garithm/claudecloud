@@ -219,6 +219,23 @@ func (h *ProxyHandler) Tabs(w http.ResponseWriter, r *http.Request) {
 	h.proxyHTTP(w, r, "/tabs")
 }
 
+// Sessions proxies GET /instances/{id}/sessions to the agent.
+func (h *ProxyHandler) Sessions(w http.ResponseWriter, r *http.Request) {
+	h.proxyHTTP(w, r, "/sessions")
+}
+
+// SessionConversations proxies GET /instances/{id}/sessions/{project}/conversations to the agent.
+func (h *ProxyHandler) SessionConversations(w http.ResponseWriter, r *http.Request) {
+	project := chi.URLParam(r, "project")
+	h.proxyHTTP(w, r, "/sessions/"+project+"/conversations")
+}
+
+// DeleteTab proxies DELETE /instances/{id}/tabs/{name} to the agent.
+func (h *ProxyHandler) DeleteTab(w http.ResponseWriter, r *http.Request) {
+	name := chi.URLParam(r, "name")
+	h.proxyHTTP(w, r, "/tabs/"+name)
+}
+
 // proxyHTTP is a helper that reverse-proxies an HTTP request to the instance agent.
 func (h *ProxyHandler) proxyHTTP(w http.ResponseWriter, r *http.Request, agentPath string) {
 	_, span := proxyTracer.Start(r.Context(), "proxy.files")

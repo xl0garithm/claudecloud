@@ -105,6 +105,9 @@ func NewRouter(cfg *config.Config, svcs *Services) http.Handler {
 			r.Get("/{id}/projects", proxyH.Projects)
 			r.Post("/{id}/projects/clone", proxyH.ProjectsClone)
 			r.Post("/{id}/tabs", proxyH.Tabs)
+			r.Get("/{id}/sessions", proxyH.Sessions)
+			r.Get("/{id}/sessions/{project}/conversations", proxyH.SessionConversations)
+			r.Delete("/{id}/tabs/{name}", proxyH.DeleteTab)
 		})
 
 		// Conversation routes
