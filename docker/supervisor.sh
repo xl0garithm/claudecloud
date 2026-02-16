@@ -9,9 +9,10 @@ set -u
 MAX_BACKOFF=30
 
 start_ttyd() {
-    # -c: create session if it doesn't exist
-    # -l claude: use the claude layout (which auto-starts Claude Code in the main pane)
-    ttyd -W -p 7681 zellij attach claude -c -l claude &
+    # Try attaching to existing session; if none exists, create with layout.
+    # The layout includes `command "claude"` so Claude Code auto-starts.
+    # Older Zellij doesn't support -l on attach, so we use || fallback.
+    ttyd -W -p 7681 sh -c 'zellij attach claude 2>/dev/null || zellij --session claude --layout claude' &
     TTYD_PID=$!
     echo "supervisor: started ttyd (pid=$TTYD_PID)" >&2
 }
