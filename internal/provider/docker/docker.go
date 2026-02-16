@@ -82,9 +82,9 @@ func (p *Provider) Create(ctx context.Context, userID int, opts provider.CreateO
 		envVars = append(envVars, "ANTHROPIC_API_KEY="+opts.AnthropicAPIKey)
 	}
 	if opts.ClaudeOAuthToken != "" {
-		// ANTHROPIC_AUTH_TOKEN is the documented env var for custom Bearer auth
-		// (used by both Claude Code CLI and SDK for OAuth tokens)
-		envVars = append(envVars, "ANTHROPIC_AUTH_TOKEN="+opts.ClaudeOAuthToken)
+		// CLAUDE_CODE_OAUTH_TOKEN routes through Claude.ai's API (not direct Anthropic API).
+		// Recognized by the @anthropic-ai/claude-code SDK for OAuth authentication.
+		envVars = append(envVars, "CLAUDE_CODE_OAUTH_TOKEN="+opts.ClaudeOAuthToken)
 	}
 
 	// Create container
