@@ -10,6 +10,7 @@ const navTabs = [
   { label: "Terminal", href: "/dashboard/terminal" },
   { label: "Chat", href: "/dashboard/chat" },
   { label: "Projects", href: "/dashboard/projects" },
+  { label: "Settings", href: "/dashboard/settings" },
 ];
 
 export default function DashboardLayout({

@@ -7,6 +7,13 @@ export interface User {
   plan: string;
   subscription_status: string;
   usage_hours: number;
+  has_anthropic_key: boolean;
+}
+
+export interface Settings {
+  anthropic_api_key: string; // masked
+  claude_oauth_token: string; // masked
+  auth_method: "oauth" | "api_key" | "none";
 }
 
 export interface Instance {
@@ -119,6 +126,17 @@ export const api = {
 
   getBillingPortal() {
     return apiFetch<{ url: string }>("/billing/portal");
+  },
+
+  getSettings() {
+    return apiFetch<Settings>("/auth/settings");
+  },
+
+  updateSettings(fields: { anthropic_api_key?: string; claude_oauth_token?: string }) {
+    return apiFetch<{ status: string }>("/auth/settings", {
+      method: "PUT",
+      body: JSON.stringify(fields),
+    });
   },
 
   getFiles(instanceId: number, path?: string) {

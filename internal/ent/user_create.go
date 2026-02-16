@@ -125,6 +125,34 @@ func (_c *UserCreate) SetNillableUsageHours(v *float64) *UserCreate {
 	return _c
 }
 
+// SetAnthropicAPIKey sets the "anthropic_api_key" field.
+func (_c *UserCreate) SetAnthropicAPIKey(v string) *UserCreate {
+	_c.mutation.SetAnthropicAPIKey(v)
+	return _c
+}
+
+// SetNillableAnthropicAPIKey sets the "anthropic_api_key" field if the given value is not nil.
+func (_c *UserCreate) SetNillableAnthropicAPIKey(v *string) *UserCreate {
+	if v != nil {
+		_c.SetAnthropicAPIKey(*v)
+	}
+	return _c
+}
+
+// SetClaudeOauthToken sets the "claude_oauth_token" field.
+func (_c *UserCreate) SetClaudeOauthToken(v string) *UserCreate {
+	_c.mutation.SetClaudeOauthToken(v)
+	return _c
+}
+
+// SetNillableClaudeOauthToken sets the "claude_oauth_token" field if the given value is not nil.
+func (_c *UserCreate) SetNillableClaudeOauthToken(v *string) *UserCreate {
+	if v != nil {
+		_c.SetClaudeOauthToken(*v)
+	}
+	return _c
+}
+
 // SetCreatedAt sets the "created_at" field.
 func (_c *UserCreate) SetCreatedAt(v time.Time) *UserCreate {
 	_c.mutation.SetCreatedAt(v)
@@ -311,6 +339,14 @@ func (_c *UserCreate) createSpec() (*User, *sqlgraph.CreateSpec) {
 	if value, ok := _c.mutation.UsageHours(); ok {
 		_spec.SetField(user.FieldUsageHours, field.TypeFloat64, value)
 		_node.UsageHours = value
+	}
+	if value, ok := _c.mutation.AnthropicAPIKey(); ok {
+		_spec.SetField(user.FieldAnthropicAPIKey, field.TypeString, value)
+		_node.AnthropicAPIKey = &value
+	}
+	if value, ok := _c.mutation.ClaudeOauthToken(); ok {
+		_spec.SetField(user.FieldClaudeOauthToken, field.TypeString, value)
+		_node.ClaudeOauthToken = &value
 	}
 	if value, ok := _c.mutation.CreatedAt(); ok {
 		_spec.SetField(user.FieldCreatedAt, field.TypeTime, value)

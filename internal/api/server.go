@@ -81,8 +81,10 @@ func NewRouter(cfg *config.Config, svcs *Services) http.Handler {
 		r.Use(middleware.UserAuth(cfg.JWTSecret, cfg.APIKey))
 		r.Use(middleware.RateLimit(1, 60)) // 60 req/min burst
 
-		// Auth (me)
+		// Auth (me + settings)
 		r.Get("/auth/me", ah.Me)
+		r.Get("/auth/settings", ah.GetSettings)
+		r.Put("/auth/settings", ah.UpdateSettings)
 
 		// Instance routes
 		instH := handler.NewInstanceHandler(svcs.Instance)

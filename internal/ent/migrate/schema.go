@@ -49,6 +49,8 @@ var (
 		{Name: "subscription_status", Type: field.TypeString, Default: "inactive"},
 		{Name: "plan", Type: field.TypeString, Default: "free"},
 		{Name: "usage_hours", Type: field.TypeFloat64, Default: 0},
+		{Name: "anthropic_api_key", Type: field.TypeString, Nullable: true},
+		{Name: "claude_oauth_token", Type: field.TypeString, Nullable: true},
 		{Name: "created_at", Type: field.TypeTime},
 		{Name: "updated_at", Type: field.TypeTime},
 	}

@@ -95,6 +95,16 @@ func UsageHours(v float64) predicate.User {
 	return predicate.User(sql.FieldEQ(FieldUsageHours, v))
 }
 
+// AnthropicAPIKey applies equality check predicate on the "anthropic_api_key" field. It's identical to AnthropicAPIKeyEQ.
+func AnthropicAPIKey(v string) predicate.User {
+	return predicate.User(sql.FieldEQ(FieldAnthropicAPIKey, v))
+}
+
+// ClaudeOauthToken applies equality check predicate on the "claude_oauth_token" field. It's identical to ClaudeOauthTokenEQ.
+func ClaudeOauthToken(v string) predicate.User {
+	return predicate.User(sql.FieldEQ(FieldClaudeOauthToken, v))
+}
+
 // CreatedAt applies equality check predicate on the "created_at" field. It's identical to CreatedAtEQ.
 func CreatedAt(v time.Time) predicate.User {
 	return predicate.User(sql.FieldEQ(FieldCreatedAt, v))
@@ -638,6 +648,156 @@ func UsageHoursLT(v float64) predicate.User {
 // UsageHoursLTE applies the LTE predicate on the "usage_hours" field.
 func UsageHoursLTE(v float64) predicate.User {
 	return predicate.User(sql.FieldLTE(FieldUsageHours, v))
+}
+
+// AnthropicAPIKeyEQ applies the EQ predicate on the "anthropic_api_key" field.
+func AnthropicAPIKeyEQ(v string) predicate.User {
+	return predicate.User(sql.FieldEQ(FieldAnthropicAPIKey, v))
+}
+
+// AnthropicAPIKeyNEQ applies the NEQ predicate on the "anthropic_api_key" field.
+func AnthropicAPIKeyNEQ(v string) predicate.User {
+	return predicate.User(sql.FieldNEQ(FieldAnthropicAPIKey, v))
+}
+
+// AnthropicAPIKeyIn applies the In predicate on the "anthropic_api_key" field.
+func AnthropicAPIKeyIn(vs ...string) predicate.User {
+	return predicate.User(sql.FieldIn(FieldAnthropicAPIKey, vs...))
+}
+
+// AnthropicAPIKeyNotIn applies the NotIn predicate on the "anthropic_api_key" field.
+func AnthropicAPIKeyNotIn(vs ...string) predicate.User {
+	return predicate.User(sql.FieldNotIn(FieldAnthropicAPIKey, vs...))
+}
+
+// AnthropicAPIKeyGT applies the GT predicate on the "anthropic_api_key" field.
+func AnthropicAPIKeyGT(v string) predicate.User {
+	return predicate.User(sql.FieldGT(FieldAnthropicAPIKey, v))
+}
+
+// AnthropicAPIKeyGTE applies the GTE predicate on the "anthropic_api_key" field.
+func AnthropicAPIKeyGTE(v string) predicate.User {
+	return predicate.User(sql.FieldGTE(FieldAnthropicAPIKey, v))
+}
+
+// AnthropicAPIKeyLT applies the LT predicate on the "anthropic_api_key" field.
+func AnthropicAPIKeyLT(v string) predicate.User {
+	return predicate.User(sql.FieldLT(FieldAnthropicAPIKey, v))
+}
+
+// AnthropicAPIKeyLTE applies the LTE predicate on the "anthropic_api_key" field.
+func AnthropicAPIKeyLTE(v string) predicate.User {
+	return predicate.User(sql.FieldLTE(FieldAnthropicAPIKey, v))
+}
+
+// AnthropicAPIKeyContains applies the Contains predicate on the "anthropic_api_key" field.
+func AnthropicAPIKeyContains(v string) predicate.User {
+	return predicate.User(sql.FieldContains(FieldAnthropicAPIKey, v))
+}
+
+// AnthropicAPIKeyHasPrefix applies the HasPrefix predicate on the "anthropic_api_key" field.
+func AnthropicAPIKeyHasPrefix(v string) predicate.User {
+	return predicate.User(sql.FieldHasPrefix(FieldAnthropicAPIKey, v))
+}
+
+// AnthropicAPIKeyHasSuffix applies the HasSuffix predicate on the "anthropic_api_key" field.
+func AnthropicAPIKeyHasSuffix(v string) predicate.User {
+	return predicate.User(sql.FieldHasSuffix(FieldAnthropicAPIKey, v))
+}
+
+// AnthropicAPIKeyIsNil applies the IsNil predicate on the "anthropic_api_key" field.
+func AnthropicAPIKeyIsNil() predicate.User {
+	return predicate.User(sql.FieldIsNull(FieldAnthropicAPIKey))
+}
+
+// AnthropicAPIKeyNotNil applies the NotNil predicate on the "anthropic_api_key" field.
+func AnthropicAPIKeyNotNil() predicate.User {
+	return predicate.User(sql.FieldNotNull(FieldAnthropicAPIKey))
+}
+
+// AnthropicAPIKeyEqualFold applies the EqualFold predicate on the "anthropic_api_key" field.
+func AnthropicAPIKeyEqualFold(v string) predicate.User {
+	return predicate.User(sql.FieldEqualFold(FieldAnthropicAPIKey, v))
+}
+
+// AnthropicAPIKeyContainsFold applies the ContainsFold predicate on the "anthropic_api_key" field.
+func AnthropicAPIKeyContainsFold(v string) predicate.User {
+	return predicate.User(sql.FieldContainsFold(FieldAnthropicAPIKey, v))
+}
+
+// ClaudeOauthTokenEQ applies the EQ predicate on the "claude_oauth_token" field.
+func ClaudeOauthTokenEQ(v string) predicate.User {
+	return predicate.User(sql.FieldEQ(FieldClaudeOauthToken, v))
+}
+
+// ClaudeOauthTokenNEQ applies the NEQ predicate on the "claude_oauth_token" field.
+func ClaudeOauthTokenNEQ(v string) predicate.User {
+	return predicate.User(sql.FieldNEQ(FieldClaudeOauthToken, v))
+}
+
+// ClaudeOauthTokenIn applies the In predicate on the "claude_oauth_token" field.
+func ClaudeOauthTokenIn(vs ...string) predicate.User {
+	return predicate.User(sql.FieldIn(FieldClaudeOauthToken, vs...))
+}
+
+// ClaudeOauthTokenNotIn applies the NotIn predicate on the "claude_oauth_token" field.
+func ClaudeOauthTokenNotIn(vs ...string) predicate.User {
+	return predicate.User(sql.FieldNotIn(FieldClaudeOauthToken, vs...))
+}
+
+// ClaudeOauthTokenGT applies the GT predicate on the "claude_oauth_token" field.
+func ClaudeOauthTokenGT(v string) predicate.User {
+	return predicate.User(sql.FieldGT(FieldClaudeOauthToken, v))
+}
+
+// ClaudeOauthTokenGTE applies the GTE predicate on the "claude_oauth_token" field.
+func ClaudeOauthTokenGTE(v string) predicate.User {
+	return predicate.User(sql.FieldGTE(FieldClaudeOauthToken, v))
+}
+
+// ClaudeOauthTokenLT applies the LT predicate on the "claude_oauth_token" field.
+func ClaudeOauthTokenLT(v string) predicate.User {
+	return predicate.User(sql.FieldLT(FieldClaudeOauthToken, v))
+}
+
+// ClaudeOauthTokenLTE applies the LTE predicate on the "claude_oauth_token" field.
+func ClaudeOauthTokenLTE(v string) predicate.User {
+	return predicate.User(sql.FieldLTE(FieldClaudeOauthToken, v))
+}
+
+// ClaudeOauthTokenContains applies the Contains predicate on the "claude_oauth_token" field.
+func ClaudeOauthTokenContains(v string) predicate.User {
+	return predicate.User(sql.FieldContains(FieldClaudeOauthToken, v))
+}
+
+// ClaudeOauthTokenHasPrefix applies the HasPrefix predicate on the "claude_oauth_token" field.
+func ClaudeOauthTokenHasPrefix(v string) predicate.User {
+	return predicate.User(sql.FieldHasPrefix(FieldClaudeOauthToken, v))
+}
+
+// ClaudeOauthTokenHasSuffix applies the HasSuffix predicate on the "claude_oauth_token" field.
+func ClaudeOauthTokenHasSuffix(v string) predicate.User {
+	return predicate.User(sql.FieldHasSuffix(FieldClaudeOauthToken, v))
+}
+
+// ClaudeOauthTokenIsNil applies the IsNil predicate on the "claude_oauth_token" field.
+func ClaudeOauthTokenIsNil() predicate.User {
+	return predicate.User(sql.FieldIsNull(FieldClaudeOauthToken))
+}
+
+// ClaudeOauthTokenNotNil applies the NotNil predicate on the "claude_oauth_token" field.
+func ClaudeOauthTokenNotNil() predicate.User {
+	return predicate.User(sql.FieldNotNull(FieldClaudeOauthToken))
+}
+
+// ClaudeOauthTokenEqualFold applies the EqualFold predicate on the "claude_oauth_token" field.
+func ClaudeOauthTokenEqualFold(v string) predicate.User {
+	return predicate.User(sql.FieldEqualFold(FieldClaudeOauthToken, v))
+}
+
+// ClaudeOauthTokenContainsFold applies the ContainsFold predicate on the "claude_oauth_token" field.
+func ClaudeOauthTokenContainsFold(v string) predicate.User {
+	return predicate.User(sql.FieldContainsFold(FieldClaudeOauthToken, v))
 }
 
 // CreatedAtEQ applies the EQ predicate on the "created_at" field.

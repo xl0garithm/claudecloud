@@ -39,6 +39,16 @@ func (User) Fields() []ent.Field {
 			Default("free"),
 		field.Float("usage_hours").
 			Default(0),
+		field.String("anthropic_api_key").
+			Optional().
+			Nillable().
+			Sensitive().
+			Comment("User's Anthropic API key for Claude Code (API pay-as-you-go billing)"),
+		field.String("claude_oauth_token").
+			Optional().
+			Nillable().
+			Sensitive().
+			Comment("User's Claude.ai OAuth token for Claude Code (Pro/Max subscription billing)"),
 		field.Time("created_at").
 			Default(time.Now).
 			Immutable(),

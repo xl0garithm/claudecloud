@@ -33,9 +33,10 @@ type Instance struct {
 // CreateOptions carries optional parameters for instance creation.
 // Docker ignores these; Hetzner passes the setup key to cloud-init.
 type CreateOptions struct {
-	NetbirdSetupKey string
-	AgentSecret     string // Per-instance secret for agent auth
-	AnthropicAPIKey string // Anthropic API key injected into instance
+	NetbirdSetupKey    string
+	AgentSecret        string // Per-instance secret for agent auth
+	AnthropicAPIKey    string // Anthropic API key (API pay-as-you-go billing)
+	ClaudeOAuthToken   string // Claude.ai OAuth token (Pro/Max subscription billing)
 }
 
 // ActivityInfo holds activity data for an instance.

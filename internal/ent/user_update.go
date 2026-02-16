@@ -172,6 +172,46 @@ func (_u *UserUpdate) AddUsageHours(v float64) *UserUpdate {
 	return _u
 }
 
+// SetAnthropicAPIKey sets the "anthropic_api_key" field.
+func (_u *UserUpdate) SetAnthropicAPIKey(v string) *UserUpdate {
+	_u.mutation.SetAnthropicAPIKey(v)
+	return _u
+}
+
+// SetNillableAnthropicAPIKey sets the "anthropic_api_key" field if the given value is not nil.
+func (_u *UserUpdate) SetNillableAnthropicAPIKey(v *string) *UserUpdate {
+	if v != nil {
+		_u.SetAnthropicAPIKey(*v)
+	}
+	return _u
+}
+
+// ClearAnthropicAPIKey clears the value of the "anthropic_api_key" field.
+func (_u *UserUpdate) ClearAnthropicAPIKey() *UserUpdate {
+	_u.mutation.ClearAnthropicAPIKey()
+	return _u
+}
+
+// SetClaudeOauthToken sets the "claude_oauth_token" field.
+func (_u *UserUpdate) SetClaudeOauthToken(v string) *UserUpdate {
+	_u.mutation.SetClaudeOauthToken(v)
+	return _u
+}
+
+// SetNillableClaudeOauthToken sets the "claude_oauth_token" field if the given value is not nil.
+func (_u *UserUpdate) SetNillableClaudeOauthToken(v *string) *UserUpdate {
+	if v != nil {
+		_u.SetClaudeOauthToken(*v)
+	}
+	return _u
+}
+
+// ClearClaudeOauthToken clears the value of the "claude_oauth_token" field.
+func (_u *UserUpdate) ClearClaudeOauthToken() *UserUpdate {
+	_u.mutation.ClearClaudeOauthToken()
+	return _u
+}
+
 // SetUpdatedAt sets the "updated_at" field.
 func (_u *UserUpdate) SetUpdatedAt(v time.Time) *UserUpdate {
 	_u.mutation.SetUpdatedAt(v)
@@ -315,6 +355,18 @@ func (_u *UserUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 	}
 	if value, ok := _u.mutation.AddedUsageHours(); ok {
 		_spec.AddField(user.FieldUsageHours, field.TypeFloat64, value)
+	}
+	if value, ok := _u.mutation.AnthropicAPIKey(); ok {
+		_spec.SetField(user.FieldAnthropicAPIKey, field.TypeString, value)
+	}
+	if _u.mutation.AnthropicAPIKeyCleared() {
+		_spec.ClearField(user.FieldAnthropicAPIKey, field.TypeString)
+	}
+	if value, ok := _u.mutation.ClaudeOauthToken(); ok {
+		_spec.SetField(user.FieldClaudeOauthToken, field.TypeString, value)
+	}
+	if _u.mutation.ClaudeOauthTokenCleared() {
+		_spec.ClearField(user.FieldClaudeOauthToken, field.TypeString)
 	}
 	if value, ok := _u.mutation.UpdatedAt(); ok {
 		_spec.SetField(user.FieldUpdatedAt, field.TypeTime, value)
@@ -527,6 +579,46 @@ func (_u *UserUpdateOne) AddUsageHours(v float64) *UserUpdateOne {
 	return _u
 }
 
+// SetAnthropicAPIKey sets the "anthropic_api_key" field.
+func (_u *UserUpdateOne) SetAnthropicAPIKey(v string) *UserUpdateOne {
+	_u.mutation.SetAnthropicAPIKey(v)
+	return _u
+}
+
+// SetNillableAnthropicAPIKey sets the "anthropic_api_key" field if the given value is not nil.
+func (_u *UserUpdateOne) SetNillableAnthropicAPIKey(v *string) *UserUpdateOne {
+	if v != nil {
+		_u.SetAnthropicAPIKey(*v)
+	}
+	return _u
+}
+
+// ClearAnthropicAPIKey clears the value of the "anthropic_api_key" field.
+func (_u *UserUpdateOne) ClearAnthropicAPIKey() *UserUpdateOne {
+	_u.mutation.ClearAnthropicAPIKey()
+	return _u
+}
+
+// SetClaudeOauthToken sets the "claude_oauth_token" field.
+func (_u *UserUpdateOne) SetClaudeOauthToken(v string) *UserUpdateOne {
+	_u.mutation.SetClaudeOauthToken(v)
+	return _u
+}
+
+// SetNillableClaudeOauthToken sets the "claude_oauth_token" field if the given value is not nil.
+func (_u *UserUpdateOne) SetNillableClaudeOauthToken(v *string) *UserUpdateOne {
+	if v != nil {
+		_u.SetClaudeOauthToken(*v)
+	}
+	return _u
+}
+
+// ClearClaudeOauthToken clears the value of the "claude_oauth_token" field.
+func (_u *UserUpdateOne) ClearClaudeOauthToken() *UserUpdateOne {
+	_u.mutation.ClearClaudeOauthToken()
+	return _u
+}
+
 // SetUpdatedAt sets the "updated_at" field.
 func (_u *UserUpdateOne) SetUpdatedAt(v time.Time) *UserUpdateOne {
 	_u.mutation.SetUpdatedAt(v)
@@ -700,6 +792,18 @@ func (_u *UserUpdateOne) sqlSave(ctx context.Context) (_node *User, err error) {
 	}
 	if value, ok := _u.mutation.AddedUsageHours(); ok {
 		_spec.AddField(user.FieldUsageHours, field.TypeFloat64, value)
+	}
+	if value, ok := _u.mutation.AnthropicAPIKey(); ok {
+		_spec.SetField(user.FieldAnthropicAPIKey, field.TypeString, value)
+	}
+	if _u.mutation.AnthropicAPIKeyCleared() {
+		_spec.ClearField(user.FieldAnthropicAPIKey, field.TypeString)
+	}
+	if value, ok := _u.mutation.ClaudeOauthToken(); ok {
+		_spec.SetField(user.FieldClaudeOauthToken, field.TypeString, value)
+	}
+	if _u.mutation.ClaudeOauthTokenCleared() {
+		_spec.ClearField(user.FieldClaudeOauthToken, field.TypeString)
 	}
 	if value, ok := _u.mutation.UpdatedAt(); ok {
 		_spec.SetField(user.FieldUpdatedAt, field.TypeTime, value)

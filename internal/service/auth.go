@@ -102,6 +102,8 @@ type UserResponse struct {
 	Plan               string  `json:"plan"`
 	SubscriptionStatus string  `json:"subscription_status"`
 	UsageHours         float64 `json:"usage_hours"`
+	HasAnthropicKey    bool    `json:"has_anthropic_key"`
+	HasOAuthToken      bool    `json:"has_oauth_token"`
 }
 
 // DevLogin finds or creates a user by email, then issues a session token
@@ -159,5 +161,92 @@ func (s *AuthService) GetCurrentUser(ctx context.Context, userID int) (*UserResp
 		Plan:               u.Plan,
 		SubscriptionStatus: u.SubscriptionStatus,
 		UsageHours:         u.UsageHours,
+		HasAnthropicKey:    u.AnthropicAPIKey != nil && *u.AnthropicAPIKey != "",
+		HasOAuthToken:      u.ClaudeOauthToken != nil && *u.ClaudeOauthToken != "",
 	}, nil
+}
+
+// SettingsResponse is returned when reading user settings.
+type SettingsResponse struct {
+	AnthropicAPIKey string `json:"anthropic_api_key"` // masked
+	ClaudeOAuthToken string `json:"claude_oauth_token"` // masked
+	AuthMethod       string `json:"auth_method"`        // "oauth", "api_key", or "none"
+}
+
+// maskKey returns a masked version of a secret string.
+func maskKey(key string) string {
+	if len(key) > 12 {
+		return key[:8] + "..." + key[len(key)-4:]
+	}
+	return "****"
+}
+
+// GetSettings returns the user's settings with masked sensitive values.
+func (s *AuthService) GetSettings(ctx context.Context, userID int) (*SettingsResponse, error) {
+	u, err := s.db.User.Get(ctx, userID)
+	if err != nil {
+		if ent.IsNotFound(err) {
+			return nil, fmt.Errorf("user not found")
+		}
+		return nil, fmt.Errorf("get user: %w", err)
+	}
+
+	resp := &SettingsResponse{AuthMethod: "none"}
+
+	if u.ClaudeOauthToken != nil && *u.ClaudeOauthToken != "" {
+		resp.ClaudeOAuthToken = maskKey(*u.ClaudeOauthToken)
+		resp.AuthMethod = "oauth"
+	}
+	if u.AnthropicAPIKey != nil && *u.AnthropicAPIKey != "" {
+		resp.AnthropicAPIKey = maskKey(*u.AnthropicAPIKey)
+		if resp.AuthMethod == "none" {
+			resp.AuthMethod = "api_key"
+		}
+	}
+
+	return resp, nil
+}
+
+// UpdateSettings saves user settings. Only non-nil fields are updated.
+func (s *AuthService) UpdateSettings(ctx context.Context, userID int, anthropicKey *string, oauthToken *string) error {
+	update := s.db.User.UpdateOneID(userID)
+
+	if anthropicKey != nil {
+		if *anthropicKey == "" {
+			update = update.ClearAnthropicAPIKey()
+		} else {
+			update = update.SetAnthropicAPIKey(*anthropicKey)
+		}
+	}
+
+	if oauthToken != nil {
+		if *oauthToken == "" {
+			update = update.ClearClaudeOauthToken()
+		} else {
+			update = update.SetClaudeOauthToken(*oauthToken)
+		}
+	}
+
+	_, err := update.Save(ctx)
+	if err != nil {
+		return fmt.Errorf("update settings: %w", err)
+	}
+	return nil
+}
+
+// GetClaudeCredentials returns the user's credentials for container injection.
+// Returns (envVarName, envVarValue). OAuth token takes priority over API key.
+func (s *AuthService) GetClaudeCredentials(ctx context.Context, userID int) (string, string, error) {
+	u, err := s.db.User.Get(ctx, userID)
+	if err != nil {
+		return "", "", fmt.Errorf("get user: %w", err)
+	}
+	// OAuth token takes priority (uses Max/Pro subscription billing)
+	if u.ClaudeOauthToken != nil && *u.ClaudeOauthToken != "" {
+		return "CLAUDE_CODE_OAUTH_TOKEN", *u.ClaudeOauthToken, nil
+	}
+	if u.AnthropicAPIKey != nil && *u.AnthropicAPIKey != "" {
+		return "ANTHROPIC_API_KEY", *u.AnthropicAPIKey, nil
+	}
+	return "", "", nil
 }

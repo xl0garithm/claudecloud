@@ -1131,6 +1131,8 @@ type UserMutation struct {
 	plan                   *string
 	usage_hours            *float64
 	addusage_hours         *float64
+	anthropic_api_key      *string
+	claude_oauth_token     *string
 	created_at             *time.Time
 	updated_at             *time.Time
 	clearedFields          map[string]struct{}
@@ -1600,6 +1602,104 @@ func (m *UserMutation) ResetUsageHours() {
 	m.addusage_hours = nil
 }
 
+// SetAnthropicAPIKey sets the "anthropic_api_key" field.
+func (m *UserMutation) SetAnthropicAPIKey(s string) {
+	m.anthropic_api_key = &s
+}
+
+// AnthropicAPIKey returns the value of the "anthropic_api_key" field in the mutation.
+func (m *UserMutation) AnthropicAPIKey() (r string, exists bool) {
+	v := m.anthropic_api_key
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldAnthropicAPIKey returns the old "anthropic_api_key" field's value of the User entity.
+// If the User object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *UserMutation) OldAnthropicAPIKey(ctx context.Context) (v *string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldAnthropicAPIKey is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldAnthropicAPIKey requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldAnthropicAPIKey: %w", err)
+	}
+	return oldValue.AnthropicAPIKey, nil
+}
+
+// ClearAnthropicAPIKey clears the value of the "anthropic_api_key" field.
+func (m *UserMutation) ClearAnthropicAPIKey() {
+	m.anthropic_api_key = nil
+	m.clearedFields[user.FieldAnthropicAPIKey] = struct{}{}
+}
+
+// AnthropicAPIKeyCleared returns if the "anthropic_api_key" field was cleared in this mutation.
+func (m *UserMutation) AnthropicAPIKeyCleared() bool {
+	_, ok := m.clearedFields[user.FieldAnthropicAPIKey]
+	return ok
+}
+
+// ResetAnthropicAPIKey resets all changes to the "anthropic_api_key" field.
+func (m *UserMutation) ResetAnthropicAPIKey() {
+	m.anthropic_api_key = nil
+	delete(m.clearedFields, user.FieldAnthropicAPIKey)
+}
+
+// SetClaudeOauthToken sets the "claude_oauth_token" field.
+func (m *UserMutation) SetClaudeOauthToken(s string) {
+	m.claude_oauth_token = &s
+}
+
+// ClaudeOauthToken returns the value of the "claude_oauth_token" field in the mutation.
+func (m *UserMutation) ClaudeOauthToken() (r string, exists bool) {
+	v := m.claude_oauth_token
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldClaudeOauthToken returns the old "claude_oauth_token" field's value of the User entity.
+// If the User object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *UserMutation) OldClaudeOauthToken(ctx context.Context) (v *string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldClaudeOauthToken is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldClaudeOauthToken requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldClaudeOauthToken: %w", err)
+	}
+	return oldValue.ClaudeOauthToken, nil
+}
+
+// ClearClaudeOauthToken clears the value of the "claude_oauth_token" field.
+func (m *UserMutation) ClearClaudeOauthToken() {
+	m.claude_oauth_token = nil
+	m.clearedFields[user.FieldClaudeOauthToken] = struct{}{}
+}
+
+// ClaudeOauthTokenCleared returns if the "claude_oauth_token" field was cleared in this mutation.
+func (m *UserMutation) ClaudeOauthTokenCleared() bool {
+	_, ok := m.clearedFields[user.FieldClaudeOauthToken]
+	return ok
+}
+
+// ResetClaudeOauthToken resets all changes to the "claude_oauth_token" field.
+func (m *UserMutation) ResetClaudeOauthToken() {
+	m.claude_oauth_token = nil
+	delete(m.clearedFields, user.FieldClaudeOauthToken)
+}
+
 // SetCreatedAt sets the "created_at" field.
 func (m *UserMutation) SetCreatedAt(t time.Time) {
 	m.created_at = &t
@@ -1760,7 +1860,7 @@ func (m *UserMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *UserMutation) Fields() []string {
-	fields := make([]string, 0, 10)
+	fields := make([]string, 0, 12)
 	if m.email != nil {
 		fields = append(fields, user.FieldEmail)
 	}
@@ -1784,6 +1884,12 @@ func (m *UserMutation) Fields() []string {
 	}
 	if m.usage_hours != nil {
 		fields = append(fields, user.FieldUsageHours)
+	}
+	if m.anthropic_api_key != nil {
+		fields = append(fields, user.FieldAnthropicAPIKey)
+	}
+	if m.claude_oauth_token != nil {
+		fields = append(fields, user.FieldClaudeOauthToken)
 	}
 	if m.created_at != nil {
 		fields = append(fields, user.FieldCreatedAt)
@@ -1815,6 +1921,10 @@ func (m *UserMutation) Field(name string) (ent.Value, bool) {
 		return m.Plan()
 	case user.FieldUsageHours:
 		return m.UsageHours()
+	case user.FieldAnthropicAPIKey:
+		return m.AnthropicAPIKey()
+	case user.FieldClaudeOauthToken:
+		return m.ClaudeOauthToken()
 	case user.FieldCreatedAt:
 		return m.CreatedAt()
 	case user.FieldUpdatedAt:
@@ -1844,6 +1954,10 @@ func (m *UserMutation) OldField(ctx context.Context, name string) (ent.Value, er
 		return m.OldPlan(ctx)
 	case user.FieldUsageHours:
 		return m.OldUsageHours(ctx)
+	case user.FieldAnthropicAPIKey:
+		return m.OldAnthropicAPIKey(ctx)
+	case user.FieldClaudeOauthToken:
+		return m.OldClaudeOauthToken(ctx)
 	case user.FieldCreatedAt:
 		return m.OldCreatedAt(ctx)
 	case user.FieldUpdatedAt:
@@ -1912,6 +2026,20 @@ func (m *UserMutation) SetField(name string, value ent.Value) error {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
 		m.SetUsageHours(v)
+		return nil
+	case user.FieldAnthropicAPIKey:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetAnthropicAPIKey(v)
+		return nil
+	case user.FieldClaudeOauthToken:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetClaudeOauthToken(v)
 		return nil
 	case user.FieldCreatedAt:
 		v, ok := value.(time.Time)
@@ -1984,6 +2112,12 @@ func (m *UserMutation) ClearedFields() []string {
 	if m.FieldCleared(user.FieldStripeSubscriptionID) {
 		fields = append(fields, user.FieldStripeSubscriptionID)
 	}
+	if m.FieldCleared(user.FieldAnthropicAPIKey) {
+		fields = append(fields, user.FieldAnthropicAPIKey)
+	}
+	if m.FieldCleared(user.FieldClaudeOauthToken) {
+		fields = append(fields, user.FieldClaudeOauthToken)
+	}
 	return fields
 }
 
@@ -2009,6 +2143,12 @@ func (m *UserMutation) ClearField(name string) error {
 		return nil
 	case user.FieldStripeSubscriptionID:
 		m.ClearStripeSubscriptionID()
+		return nil
+	case user.FieldAnthropicAPIKey:
+		m.ClearAnthropicAPIKey()
+		return nil
+	case user.FieldClaudeOauthToken:
+		m.ClearClaudeOauthToken()
 		return nil
 	}
 	return fmt.Errorf("unknown User nullable field %s", name)
@@ -2041,6 +2181,12 @@ func (m *UserMutation) ResetField(name string) error {
 		return nil
 	case user.FieldUsageHours:
 		m.ResetUsageHours()
+		return nil
+	case user.FieldAnthropicAPIKey:
+		m.ResetAnthropicAPIKey()
+		return nil
+	case user.FieldClaudeOauthToken:
+		m.ResetClaudeOauthToken()
 		return nil
 	case user.FieldCreatedAt:
 		m.ResetCreatedAt()

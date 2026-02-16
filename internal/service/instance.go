@@ -99,9 +99,23 @@ func (s *InstanceService) Create(ctx context.Context, userID int) (*InstanceResp
 	}
 	agentSecret := hex.EncodeToString(secretBytes)
 
+	// Load user credentials: per-user OAuth token or API key, with platform key as fallback
 	var opts provider.CreateOptions
 	opts.AgentSecret = agentSecret
-	opts.AnthropicAPIKey = s.anthropicAPIKey
+
+	user, err := s.db.User.Get(ctx, userID)
+	if err == nil {
+		if user.ClaudeOauthToken != nil && *user.ClaudeOauthToken != "" {
+			opts.ClaudeOAuthToken = *user.ClaudeOauthToken
+		}
+		if user.AnthropicAPIKey != nil && *user.AnthropicAPIKey != "" {
+			opts.AnthropicAPIKey = *user.AnthropicAPIKey
+		}
+	}
+	// Fall back to platform-wide key if user has neither
+	if opts.AnthropicAPIKey == "" && opts.ClaudeOAuthToken == "" {
+		opts.AnthropicAPIKey = s.anthropicAPIKey
+	}
 	var prep *NetbirdPrep
 
 	// Phase 1: Prepare Netbird access (Hetzner only)

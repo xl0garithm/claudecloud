@@ -30,6 +30,10 @@ const (
 	FieldPlan = "plan"
 	// FieldUsageHours holds the string denoting the usage_hours field in the database.
 	FieldUsageHours = "usage_hours"
+	// FieldAnthropicAPIKey holds the string denoting the anthropic_api_key field in the database.
+	FieldAnthropicAPIKey = "anthropic_api_key"
+	// FieldClaudeOauthToken holds the string denoting the claude_oauth_token field in the database.
+	FieldClaudeOauthToken = "claude_oauth_token"
 	// FieldCreatedAt holds the string denoting the created_at field in the database.
 	FieldCreatedAt = "created_at"
 	// FieldUpdatedAt holds the string denoting the updated_at field in the database.
@@ -58,6 +62,8 @@ var Columns = []string{
 	FieldSubscriptionStatus,
 	FieldPlan,
 	FieldUsageHours,
+	FieldAnthropicAPIKey,
+	FieldClaudeOauthToken,
 	FieldCreatedAt,
 	FieldUpdatedAt,
 }
@@ -137,6 +143,16 @@ func ByPlan(opts ...sql.OrderTermOption) OrderOption {
 // ByUsageHours orders the results by the usage_hours field.
 func ByUsageHours(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldUsageHours, opts...).ToFunc()
+}
+
+// ByAnthropicAPIKey orders the results by the anthropic_api_key field.
+func ByAnthropicAPIKey(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldAnthropicAPIKey, opts...).ToFunc()
+}
+
+// ByClaudeOauthToken orders the results by the claude_oauth_token field.
+func ByClaudeOauthToken(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldClaudeOauthToken, opts...).ToFunc()
 }
 
 // ByCreatedAt orders the results by the created_at field.

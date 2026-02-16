@@ -33,6 +33,10 @@ type User struct {
 	Plan string `json:"plan,omitempty"`
 	// UsageHours holds the value of the "usage_hours" field.
 	UsageHours float64 `json:"usage_hours,omitempty"`
+	// User's Anthropic API key for Claude Code (API pay-as-you-go billing)
+	AnthropicAPIKey *string `json:"-"`
+	// User's Claude.ai OAuth token for Claude Code (Pro/Max subscription billing)
+	ClaudeOauthToken *string `json:"-"`
 	// CreatedAt holds the value of the "created_at" field.
 	CreatedAt time.Time `json:"created_at,omitempty"`
 	// UpdatedAt holds the value of the "updated_at" field.
@@ -70,7 +74,7 @@ func (*User) scanValues(columns []string) ([]any, error) {
 			values[i] = new(sql.NullFloat64)
 		case user.FieldID:
 			values[i] = new(sql.NullInt64)
-		case user.FieldEmail, user.FieldAPIKey, user.FieldName, user.FieldStripeCustomerID, user.FieldStripeSubscriptionID, user.FieldSubscriptionStatus, user.FieldPlan:
+		case user.FieldEmail, user.FieldAPIKey, user.FieldName, user.FieldStripeCustomerID, user.FieldStripeSubscriptionID, user.FieldSubscriptionStatus, user.FieldPlan, user.FieldAnthropicAPIKey, user.FieldClaudeOauthToken:
 			values[i] = new(sql.NullString)
 		case user.FieldCreatedAt, user.FieldUpdatedAt:
 			values[i] = new(sql.NullTime)
@@ -145,6 +149,20 @@ func (_m *User) assignValues(columns []string, values []any) error {
 				return fmt.Errorf("unexpected type %T for field usage_hours", values[i])
 			} else if value.Valid {
 				_m.UsageHours = value.Float64
+			}
+		case user.FieldAnthropicAPIKey:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field anthropic_api_key", values[i])
+			} else if value.Valid {
+				_m.AnthropicAPIKey = new(string)
+				*_m.AnthropicAPIKey = value.String
+			}
+		case user.FieldClaudeOauthToken:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field claude_oauth_token", values[i])
+			} else if value.Valid {
+				_m.ClaudeOauthToken = new(string)
+				*_m.ClaudeOauthToken = value.String
 			}
 		case user.FieldCreatedAt:
 			if value, ok := values[i].(*sql.NullTime); !ok {
@@ -228,6 +246,10 @@ func (_m *User) String() string {
 	builder.WriteString(", ")
 	builder.WriteString("usage_hours=")
 	builder.WriteString(fmt.Sprintf("%v", _m.UsageHours))
+	builder.WriteString(", ")
+	builder.WriteString("anthropic_api_key=<sensitive>")
+	builder.WriteString(", ")
+	builder.WriteString("claude_oauth_token=<sensitive>")
 	builder.WriteString(", ")
 	builder.WriteString("created_at=")
 	builder.WriteString(_m.CreatedAt.Format(time.ANSIC))

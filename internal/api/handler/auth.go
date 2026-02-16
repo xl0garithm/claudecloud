@@ -103,3 +103,47 @@ func (h *AuthHandler) Me(w http.ResponseWriter, r *http.Request) {
 
 	response.JSON(w, http.StatusOK, user)
 }
+
+type updateSettingsRequest struct {
+	AnthropicAPIKey  *string `json:"anthropic_api_key"`
+	ClaudeOAuthToken *string `json:"claude_oauth_token"`
+}
+
+// GetSettings handles GET /auth/settings.
+func (h *AuthHandler) GetSettings(w http.ResponseWriter, r *http.Request) {
+	userID := middleware.UserIDFromContext(r.Context())
+	if userID == 0 {
+		response.Error(w, http.StatusUnauthorized, "not authenticated")
+		return
+	}
+
+	settings, err := h.auth.GetSettings(r.Context(), userID)
+	if err != nil {
+		response.Error(w, http.StatusInternalServerError, "failed to get settings")
+		return
+	}
+
+	response.JSON(w, http.StatusOK, settings)
+}
+
+// UpdateSettings handles PUT /auth/settings.
+func (h *AuthHandler) UpdateSettings(w http.ResponseWriter, r *http.Request) {
+	userID := middleware.UserIDFromContext(r.Context())
+	if userID == 0 {
+		response.Error(w, http.StatusUnauthorized, "not authenticated")
+		return
+	}
+
+	var req updateSettingsRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		response.Error(w, http.StatusBadRequest, "invalid request body")
+		return
+	}
+
+	if err := h.auth.UpdateSettings(r.Context(), userID, req.AnthropicAPIKey, req.ClaudeOAuthToken); err != nil {
+		response.Error(w, http.StatusInternalServerError, "failed to update settings")
+		return
+	}
+
+	response.JSON(w, http.StatusOK, map[string]string{"status": "updated"})
+}
