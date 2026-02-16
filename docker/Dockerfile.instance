@@ -6,6 +6,7 @@ ENV DEBIAN_FRONTEND=noninteractive
 COPY scripts/instance/setup.sh /opt/cloudcode/setup.sh
 COPY scripts/instance/connect.sh /opt/cloudcode/connect.sh
 COPY scripts/instance/claude-layout.kdl /opt/cloudcode/claude-layout.kdl
+COPY scripts/instance/zellij-config.kdl /opt/cloudcode/zellij-config.kdl
 COPY docker/entrypoint.sh /entrypoint.sh
 COPY docker/supervisor.sh /supervisor.sh
 RUN chmod +x /opt/cloudcode/setup.sh /opt/cloudcode/connect.sh /entrypoint.sh /supervisor.sh
@@ -13,8 +14,9 @@ RUN chmod +x /opt/cloudcode/setup.sh /opt/cloudcode/connect.sh /entrypoint.sh /s
 # Run the idempotent setup script
 RUN /opt/cloudcode/setup.sh
 
-# Install the Zellij layout
+# Install Zellij config and layout
 RUN mkdir -p /home/claude/.config/zellij/layouts && \
+    cp /opt/cloudcode/zellij-config.kdl /home/claude/.config/zellij/config.kdl && \
     cp /opt/cloudcode/claude-layout.kdl /home/claude/.config/zellij/layouts/claude.kdl && \
     chown -R claude:claude /home/claude/.config/zellij
 

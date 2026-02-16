@@ -1,0 +1,4 @@
+// Zellij configuration for Claude Code instances.
+// Sets the Claude layout as default so `attach --create` uses it.
+
+default_layout "claude"
