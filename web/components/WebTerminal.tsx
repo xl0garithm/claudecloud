@@ -68,20 +68,18 @@ export default function WebTerminal({ instanceId }: WebTerminalProps) {
       const data = new Uint8Array(event.data as ArrayBuffer);
       if (data.length === 0) return;
 
-      // ttyd protocol: byte 0 = message type
-      // 0 = output data, 1 = set window title, 2 = set prefs
+      // ttyd protocol: first byte is ASCII char message type
+      // '0' (48) = output, '1' (49) = title, '2' (50) = prefs
       const msgType = data[0];
       const payload = data.slice(1);
 
       switch (msgType) {
-        case 0: // output
+        case 48: // '0' = output
           term.write(payload);
           break;
-        case 1: // title
-          // ignored
+        case 49: // '1' = title
           break;
-        case 2: // prefs
-          // ignored
+        case 50: // '2' = prefs
           break;
       }
     };
@@ -94,26 +92,26 @@ export default function WebTerminal({ instanceId }: WebTerminalProps) {
       setStatus("error");
     };
 
-    // Input: ttyd expects byte 0=input, followed by data
+    // Input: ttyd expects ASCII '0' (48) followed by data
     term.onData((data) => {
       if (ws.readyState === WebSocket.OPEN) {
         const encoder = new TextEncoder();
         const payload = encoder.encode(data);
         const msg = new Uint8Array(payload.length + 1);
-        msg[0] = 0; // input type
+        msg[0] = 48; // '0' = input
         msg.set(payload, 1);
         ws.send(msg.buffer);
       }
     });
 
-    // Resize: ttyd expects byte 2=resize, followed by JSON {columns, rows}
+    // Resize: ttyd expects ASCII '1' (49) followed by JSON {columns, rows}
     term.onResize(({ cols, rows }) => {
       if (ws.readyState === WebSocket.OPEN) {
         const resizeMsg = JSON.stringify({ columns: cols, rows: rows });
         const encoder = new TextEncoder();
         const payload = encoder.encode(resizeMsg);
         const msg = new Uint8Array(payload.length + 1);
-        msg[0] = 1; // resize type
+        msg[0] = 49; // '1' = resize
         msg.set(payload, 1);
         ws.send(msg.buffer);
       }
