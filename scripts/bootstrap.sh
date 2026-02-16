@@ -47,12 +47,12 @@ command -v go >/dev/null 2>&1      || fail "go not found. Install: https://go.de
 command -v node >/dev/null 2>&1    || fail "node not found. Install: https://nodejs.org/"
 command -v curl >/dev/null 2>&1    || fail "curl not found"
 
-GO_VER=$(go version | grep -oP 'go\K[0-9]+\.[0-9]+')
-NODE_VER=$(node -v | grep -oP 'v\K[0-9]+')
+GO_VER=$(go version | sed 's/.*go\([0-9]*\.[0-9]*\).*/\1/')
+NODE_VER=$(node -v)
 
-ok "docker $(docker --version | grep -oP '[0-9]+\.[0-9]+\.[0-9]+')"
+ok "docker $(docker --version | sed 's/[^0-9]*\([0-9]*\.[0-9]*\.[0-9]*\).*/\1/')"
 ok "go $GO_VER"
-ok "node v$NODE_VER"
+ok "node $NODE_VER"
 
 # ── 2. Environment file ─────────────────────────────────────────────
 log "Setting up environment..."
