@@ -111,9 +111,11 @@ func (h *ProxyHandler) Terminal(w http.ResponseWriter, r *http.Request) {
 		for {
 			msgType, msg, err := backendConn.ReadMessage()
 			if err != nil {
+				slog.Debug("terminal proxy: backend→client read error", "host", host, "error", err)
 				return
 			}
 			if err := clientConn.WriteMessage(msgType, msg); err != nil {
+				slog.Debug("terminal proxy: backend→client write error", "host", host, "error", err)
 				return
 			}
 		}
@@ -123,9 +125,11 @@ func (h *ProxyHandler) Terminal(w http.ResponseWriter, r *http.Request) {
 		for {
 			msgType, msg, err := clientConn.ReadMessage()
 			if err != nil {
+				slog.Debug("terminal proxy: client→backend read error", "host", host, "error", err)
 				return
 			}
 			if err := backendConn.WriteMessage(msgType, msg); err != nil {
+				slog.Debug("terminal proxy: client→backend write error", "host", host, "error", err)
 				return
 			}
 		}

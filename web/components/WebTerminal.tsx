@@ -62,9 +62,23 @@ export default function WebTerminal({ instanceId }: WebTerminalProps) {
 
     ws.onopen = () => {
       setStatus("connected");
+      // ttyd requires an auth token as the first message, even when no auth is configured.
+      // Without this, ttyd suppresses output frames.
+      ws.send(JSON.stringify({ AuthToken: "" }));
+      // Send initial terminal dimensions — fitAddon.fit() fires before this handler
+      // is registered, so onResize never captures the initial size.
+      const { cols, rows } = term;
+      const resizeMsg = JSON.stringify({ columns: cols, rows: rows });
+      const encoder = new TextEncoder();
+      const payload = encoder.encode(resizeMsg);
+      const msg = new Uint8Array(payload.length + 1);
+      msg[0] = 49; // '1' = resize
+      msg.set(payload, 1);
+      ws.send(msg.buffer);
     };
 
     ws.onmessage = (event) => {
+      if (typeof event.data === "string") return; // Ignore text frames
       const data = new Uint8Array(event.data as ArrayBuffer);
       if (data.length === 0) return;
 
