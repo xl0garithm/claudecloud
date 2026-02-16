@@ -1,13 +1,7 @@
 // Zellij layout for Claude Code instances.
-// 70% main pane (Claude Code auto-starts), 30% side pane (shell).
+// Single pane — tab switching managed by the web UI via agent IPC.
 layout {
-    pane split_direction="vertical" {
-        pane size="70%" {
-            command "claude"
-            name "claude"
-        }
-        pane size="30%" {
-            name "shell"
-        }
+    tab name="shell" focus=true {
+        pane
     }
 }

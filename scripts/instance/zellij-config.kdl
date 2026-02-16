@@ -1,4 +1,23 @@
 // Zellij configuration for Claude Code instances.
-// Sets the Claude layout as default so `attach --create` uses it.
+// Zellij is invisible — users only see Claude Code output.
 
 default_layout "claude"
+default_mode "locked"
+pane_frames false
+simplified_ui true
+
+keybinds clear-defaults=true {
+}
+
+themes {
+    default {
+        bg "#000000"
+        fg "#000000"
+    }
+}
+
+ui {
+    pane_frames {
+        hide_session_name true
+    }
+}
