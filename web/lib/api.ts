@@ -44,6 +44,22 @@ export interface Project {
   remoteUrl: string;
 }
 
+export interface Conversation {
+  id: number;
+  project_path: string;
+  title: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface ChatMessageRecord {
+  id: number;
+  role: "user" | "assistant";
+  content: string;
+  tool_events?: unknown[];
+  created_at: string;
+}
+
 async function apiFetch<T>(path: string, options?: RequestInit): Promise<T> {
   const res = await fetch(`${API_BASE}${path}`, {
     credentials: "include",
@@ -162,5 +178,47 @@ export const api = {
         body: JSON.stringify({ url, branch: branch || undefined }),
       }
     );
+  },
+
+  // Conversations
+  getOrCreateConversation(projectPath: string) {
+    return apiFetch<Conversation>(
+      `/conversations?project=${encodeURIComponent(projectPath)}`
+    );
+  },
+
+  listConversations() {
+    return apiFetch<Conversation[]>("/conversations/list");
+  },
+
+  getMessages(conversationId: number) {
+    return apiFetch<ChatMessageRecord[]>(
+      `/conversations/${conversationId}/messages`
+    );
+  },
+
+  addMessage(
+    conversationId: number,
+    role: "user" | "assistant",
+    content: string,
+    toolEvents?: string
+  ) {
+    return apiFetch<ChatMessageRecord>(
+      `/conversations/${conversationId}/messages`,
+      {
+        method: "POST",
+        body: JSON.stringify({
+          role,
+          content,
+          tool_events: toolEvents || undefined,
+        }),
+      }
+    );
+  },
+
+  deleteConversation(conversationId: number) {
+    return apiFetch<{ status: string }>(`/conversations/${conversationId}`, {
+      method: "DELETE",
+    });
   },
 };

@@ -8,6 +8,59 @@ import (
 )
 
 var (
+	// ChatMessagesColumns holds the columns for the "chat_messages" table.
+	ChatMessagesColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt, Increment: true},
+		{Name: "role", Type: field.TypeEnum, Enums: []string{"user", "assistant"}},
+		{Name: "content", Type: field.TypeString, Size: 2147483647, Default: ""},
+		{Name: "tool_events", Type: field.TypeString, Nullable: true, Size: 2147483647},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "conversation_messages", Type: field.TypeInt},
+	}
+	// ChatMessagesTable holds the schema information for the "chat_messages" table.
+	ChatMessagesTable = &schema.Table{
+		Name:       "chat_messages",
+		Columns:    ChatMessagesColumns,
+		PrimaryKey: []*schema.Column{ChatMessagesColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "chat_messages_conversations_messages",
+				Columns:    []*schema.Column{ChatMessagesColumns[5]},
+				RefColumns: []*schema.Column{ConversationsColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+		},
+	}
+	// ConversationsColumns holds the columns for the "conversations" table.
+	ConversationsColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt, Increment: true},
+		{Name: "project_path", Type: field.TypeString, Default: ""},
+		{Name: "title", Type: field.TypeString, Default: ""},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "user_conversations", Type: field.TypeInt},
+	}
+	// ConversationsTable holds the schema information for the "conversations" table.
+	ConversationsTable = &schema.Table{
+		Name:       "conversations",
+		Columns:    ConversationsColumns,
+		PrimaryKey: []*schema.Column{ConversationsColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "conversations_users_conversations",
+				Columns:    []*schema.Column{ConversationsColumns[5]},
+				RefColumns: []*schema.Column{UsersColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+		},
+		Indexes: []*schema.Index{
+			{
+				Name:    "conversation_project_path_user_conversations",
+				Unique:  true,
+				Columns: []*schema.Column{ConversationsColumns[1], ConversationsColumns[5]},
+			},
+		},
+	}
 	// InstancesColumns holds the columns for the "instances" table.
 	InstancesColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeInt, Increment: true},
@@ -62,11 +115,15 @@ var (
 	}
 	// Tables holds all the tables in the schema.
 	Tables = []*schema.Table{
+		ChatMessagesTable,
+		ConversationsTable,
 		InstancesTable,
 		UsersTable,
 	}
 )
 
 func init() {
+	ChatMessagesTable.ForeignKeys[0].RefTable = ConversationsTable
+	ConversationsTable.ForeignKeys[0].RefTable = UsersTable
 	InstancesTable.ForeignKeys[0].RefTable = UsersTable
 }

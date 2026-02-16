@@ -144,13 +144,16 @@ func main() {
 	actSvc.Start()
 
 	// Router
+	conversationSvc := service.NewConversationService(db)
+
 	svcs := &api.Services{
-		Instance: instanceSvc,
-		Auth:     authSvc,
-		Billing:  billingSvc,
-		DB:       sqlDB,
-		Version:  version,
-		Logger:   logger,
+		Instance:     instanceSvc,
+		Auth:         authSvc,
+		Billing:      billingSvc,
+		Conversation: conversationSvc,
+		DB:           sqlDB,
+		Version:      version,
+		Logger:       logger,
 	}
 	router := api.NewRouter(cfg, svcs)
 

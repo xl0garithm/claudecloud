@@ -17,12 +17,13 @@ import (
 
 // Services bundles all service dependencies for the router.
 type Services struct {
-	Instance *service.InstanceService
-	Auth     *service.AuthService
-	Billing  *service.BillingService // nil if Stripe not configured
-	DB      *sql.DB
-	Version string
-	Logger  *slog.Logger
+	Instance     *service.InstanceService
+	Auth         *service.AuthService
+	Billing      *service.BillingService      // nil if Stripe not configured
+	Conversation *service.ConversationService
+	DB           *sql.DB
+	Version      string
+	Logger       *slog.Logger
 }
 
 // NewRouter creates the Chi router with all routes and middleware.
@@ -104,6 +105,18 @@ func NewRouter(cfg *config.Config, svcs *Services) http.Handler {
 			r.Get("/{id}/projects", proxyH.Projects)
 			r.Post("/{id}/projects/clone", proxyH.ProjectsClone)
 		})
+
+		// Conversation routes
+		if svcs.Conversation != nil {
+			convH := handler.NewConversationHandler(svcs.Conversation)
+			r.Route("/conversations", func(r chi.Router) {
+				r.Get("/", convH.GetOrCreate)   // ?project=<path>
+				r.Get("/list", convH.List)
+				r.Get("/{id}/messages", convH.GetMessages)
+				r.Post("/{id}/messages", convH.AddMessage)
+				r.Delete("/{id}", convH.Delete)
+			})
+		}
 
 		// Billing routes (authed)
 		if bh != nil {

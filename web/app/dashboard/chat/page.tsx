@@ -2,7 +2,7 @@
 
 import { Suspense, useEffect, useState, useRef, useCallback } from "react";
 import { useSearchParams } from "next/navigation";
-import { api, Instance } from "@/lib/api";
+import { api, Instance, Conversation } from "@/lib/api";
 import { createAuthWsUrl } from "@/lib/ws";
 import ChatMessage, { Message } from "@/components/ChatMessage";
 import ChatInput from "@/components/ChatInput";
@@ -22,6 +22,7 @@ function ChatPageInner() {
   const initialCwd = searchParams.get("cwd") || "";
 
   const [instance, setInstance] = useState<Instance | null>(null);
+  const [conversation, setConversation] = useState<Conversation | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
   const [streaming, setStreaming] = useState(false);
   const [cwd, setCwd] = useState(initialCwd);
@@ -32,16 +33,41 @@ function ChatPageInner() {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const pendingToolEventsRef = useRef<ToolEvent[]>([]);
   const pendingTextRef = useRef("");
+  const conversationRef = useRef<Conversation | null>(null);
 
+  // Keep ref in sync for use in callbacks
   useEffect(() => {
-    api
-      .getMyInstance()
-      .then(setInstance)
-      .catch((err) => {
-        setError(err instanceof Error ? err.message : "Failed to load instance");
-      })
-      .finally(() => setLoading(false));
-  }, []);
+    conversationRef.current = conversation;
+  }, [conversation]);
+
+  // Load instance and conversation
+  useEffect(() => {
+    async function init() {
+      try {
+        const inst = await api.getMyInstance();
+        setInstance(inst);
+
+        // Get or create conversation for this project path
+        const conv = await api.getOrCreateConversation(initialCwd);
+        setConversation(conv);
+
+        // Load existing messages
+        const msgs = await api.getMessages(conv.id);
+        setMessages(
+          msgs.map((m) => ({
+            role: m.role,
+            content: m.content,
+            toolEvents: m.tool_events as ToolEvent[] | undefined,
+          }))
+        );
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "Failed to load");
+      } finally {
+        setLoading(false);
+      }
+    }
+    init();
+  }, [initialCwd]);
 
   // Auto-scroll to bottom
   useEffect(() => {
@@ -101,22 +127,40 @@ function ChatPageInner() {
             });
             break;
 
-          case "done":
-            if (data.content && data.content !== pendingTextRef.current) {
-              pendingTextRef.current = data.content;
+          case "done": {
+            const finalContent =
+              data.content && data.content !== pendingTextRef.current
+                ? data.content
+                : pendingTextRef.current;
+
+            if (finalContent) {
               setMessages((prev) => {
                 const last = prev[prev.length - 1];
                 if (last && last.role === "assistant") {
                   return [
                     ...prev.slice(0, -1),
-                    { ...last, content: data.content },
+                    { ...last, content: finalContent },
                   ];
                 }
                 return prev;
               });
             }
+
+            // Persist assistant message to DB
+            const conv = conversationRef.current;
+            if (conv && finalContent) {
+              const toolEventsJson =
+                pendingToolEventsRef.current.length > 0
+                  ? JSON.stringify(pendingToolEventsRef.current)
+                  : undefined;
+              api
+                .addMessage(conv.id, "assistant", finalContent, toolEventsJson)
+                .catch(() => {});
+            }
+
             setStreaming(false);
             break;
+          }
 
           case "error":
             setMessages((prev) => [
@@ -157,7 +201,6 @@ function ChatPageInner() {
   function handleSend(content: string) {
     if (!wsRef.current || wsRef.current.readyState !== WebSocket.OPEN) {
       if (instance) connectWs(instance);
-      // Wait briefly for connection
       setTimeout(() => handleSend(content), 500);
       return;
     }
@@ -167,6 +210,11 @@ function ChatPageInner() {
     pendingTextRef.current = "";
     pendingToolEventsRef.current = [];
 
+    // Persist user message to DB
+    if (conversation) {
+      api.addMessage(conversation.id, "user", content).catch(() => {});
+    }
+
     wsRef.current.send(
       JSON.stringify({
         type: "message",
@@ -174,6 +222,20 @@ function ChatPageInner() {
         cwd: cwd || undefined,
       })
     );
+  }
+
+  async function handleNewChat() {
+    if (!conversation) return;
+
+    try {
+      await api.deleteConversation(conversation.id);
+      setMessages([]);
+      // Create a fresh conversation
+      const conv = await api.getOrCreateConversation(cwd);
+      setConversation(conv);
+    } catch {
+      // Ignore — conversation may already be gone
+    }
   }
 
   if (loading) {
@@ -241,9 +303,23 @@ function ChatPageInner() {
               cwd: /{cwd}
             </span>
           )}
-          {streaming && (
-            <span className="ml-auto text-xs text-gray-400">Streaming...</span>
+          {conversation && (
+            <span className="text-xs text-gray-400">
+              {conversation.title || "General"}
+            </span>
           )}
+          <div className="ml-auto flex items-center gap-2">
+            {streaming && (
+              <span className="text-xs text-gray-400">Streaming...</span>
+            )}
+            <button
+              onClick={handleNewChat}
+              disabled={streaming || messages.length === 0}
+              className="rounded px-2 py-1 text-xs text-gray-500 hover:bg-gray-100 disabled:opacity-30"
+            >
+              New Chat
+            </button>
+          </div>
         </div>
 
         {/* Messages */}

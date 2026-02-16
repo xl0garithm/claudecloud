@@ -51,9 +51,11 @@ type User struct {
 type UserEdges struct {
 	// Instances holds the value of the instances edge.
 	Instances []*Instance `json:"instances,omitempty"`
+	// Conversations holds the value of the conversations edge.
+	Conversations []*Conversation `json:"conversations,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [1]bool
+	loadedTypes [2]bool
 }
 
 // InstancesOrErr returns the Instances value or an error if the edge
@@ -63,6 +65,15 @@ func (e UserEdges) InstancesOrErr() ([]*Instance, error) {
 		return e.Instances, nil
 	}
 	return nil, &NotLoadedError{edge: "instances"}
+}
+
+// ConversationsOrErr returns the Conversations value or an error if the edge
+// was not loaded in eager-loading.
+func (e UserEdges) ConversationsOrErr() ([]*Conversation, error) {
+	if e.loadedTypes[1] {
+		return e.Conversations, nil
+	}
+	return nil, &NotLoadedError{edge: "conversations"}
 }
 
 // scanValues returns the types for scanning values from sql.Rows.
@@ -192,6 +203,11 @@ func (_m *User) Value(name string) (ent.Value, error) {
 // QueryInstances queries the "instances" edge of the User entity.
 func (_m *User) QueryInstances() *InstanceQuery {
 	return NewUserClient(_m.config).QueryInstances(_m)
+}
+
+// QueryConversations queries the "conversations" edge of the User entity.
+func (_m *User) QueryConversations() *ConversationQuery {
+	return NewUserClient(_m.config).QueryConversations(_m)
 }
 
 // Update returns a builder for updating this User.

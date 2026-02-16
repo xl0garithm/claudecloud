@@ -5,6 +5,8 @@ package ent
 import (
 	"time"
 
+	"github.com/logan/cloudcode/internal/ent/chatmessage"
+	"github.com/logan/cloudcode/internal/ent/conversation"
 	"github.com/logan/cloudcode/internal/ent/instance"
 	"github.com/logan/cloudcode/internal/ent/schema"
 	"github.com/logan/cloudcode/internal/ent/user"
@@ -14,6 +16,36 @@ import (
 // (default values, validators, hooks and policies) and stitches it
 // to their package variables.
 func init() {
+	chatmessageFields := schema.ChatMessage{}.Fields()
+	_ = chatmessageFields
+	// chatmessageDescContent is the schema descriptor for content field.
+	chatmessageDescContent := chatmessageFields[1].Descriptor()
+	// chatmessage.DefaultContent holds the default value on creation for the content field.
+	chatmessage.DefaultContent = chatmessageDescContent.Default.(string)
+	// chatmessageDescCreatedAt is the schema descriptor for created_at field.
+	chatmessageDescCreatedAt := chatmessageFields[3].Descriptor()
+	// chatmessage.DefaultCreatedAt holds the default value on creation for the created_at field.
+	chatmessage.DefaultCreatedAt = chatmessageDescCreatedAt.Default.(func() time.Time)
+	conversationFields := schema.Conversation{}.Fields()
+	_ = conversationFields
+	// conversationDescProjectPath is the schema descriptor for project_path field.
+	conversationDescProjectPath := conversationFields[0].Descriptor()
+	// conversation.DefaultProjectPath holds the default value on creation for the project_path field.
+	conversation.DefaultProjectPath = conversationDescProjectPath.Default.(string)
+	// conversationDescTitle is the schema descriptor for title field.
+	conversationDescTitle := conversationFields[1].Descriptor()
+	// conversation.DefaultTitle holds the default value on creation for the title field.
+	conversation.DefaultTitle = conversationDescTitle.Default.(string)
+	// conversationDescCreatedAt is the schema descriptor for created_at field.
+	conversationDescCreatedAt := conversationFields[2].Descriptor()
+	// conversation.DefaultCreatedAt holds the default value on creation for the created_at field.
+	conversation.DefaultCreatedAt = conversationDescCreatedAt.Default.(func() time.Time)
+	// conversationDescUpdatedAt is the schema descriptor for updated_at field.
+	conversationDescUpdatedAt := conversationFields[3].Descriptor()
+	// conversation.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	conversation.DefaultUpdatedAt = conversationDescUpdatedAt.Default.(func() time.Time)
+	// conversation.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	conversation.UpdateDefaultUpdatedAt = conversationDescUpdatedAt.UpdateDefault.(func() time.Time)
 	instanceFields := schema.Instance{}.Fields()
 	_ = instanceFields
 	// instanceDescProvider is the schema descriptor for provider field.

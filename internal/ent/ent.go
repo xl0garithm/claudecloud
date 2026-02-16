@@ -12,6 +12,8 @@ import (
 	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
+	"github.com/logan/cloudcode/internal/ent/chatmessage"
+	"github.com/logan/cloudcode/internal/ent/conversation"
 	"github.com/logan/cloudcode/internal/ent/instance"
 	"github.com/logan/cloudcode/internal/ent/user"
 )
@@ -74,8 +76,10 @@ var (
 func checkColumn(t, c string) error {
 	initCheck.Do(func() {
 		columnCheck = sql.NewColumnCheck(map[string]func(string) bool{
-			instance.Table: instance.ValidColumn,
-			user.Table:     user.ValidColumn,
+			chatmessage.Table:  chatmessage.ValidColumn,
+			conversation.Table: conversation.ValidColumn,
+			instance.Table:     instance.ValidColumn,
+			user.Table:         user.ValidColumn,
 		})
 	})
 	return columnCheck(t, c)
