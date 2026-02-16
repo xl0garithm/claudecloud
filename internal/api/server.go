@@ -59,7 +59,7 @@ func NewRouter(cfg *config.Config, svcs *Services) http.Handler {
 	r.Get("/install.sh", ih.ServeScript)
 
 	// Auth routes (no auth required) — strict rate limit
-	ah := handler.NewAuthHandler(svcs.Auth, cfg.FrontendURL)
+	ah := handler.NewAuthHandler(svcs.Auth, cfg.FrontendURL, cfg.Environment != "production")
 	r.Group(func(r chi.Router) {
 		r.Use(middleware.RateLimit(5.0/60.0, 5)) // 5 req/min
 		r.Post("/auth/login", ah.Login)

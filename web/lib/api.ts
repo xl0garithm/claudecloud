@@ -57,7 +57,7 @@ async function apiFetch<T>(path: string, options?: RequestInit): Promise<T> {
 
 export const api = {
   login(email: string) {
-    return apiFetch<{ message: string }>("/auth/login", {
+    return apiFetch<{ message: string; token?: string }>("/auth/login", {
       method: "POST",
       body: JSON.stringify({ email }),
     });

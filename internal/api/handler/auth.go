@@ -13,11 +13,12 @@ import (
 type AuthHandler struct {
 	auth        *service.AuthService
 	frontendURL string
+	devMode     bool
 }
 
 // NewAuthHandler creates a new AuthHandler.
-func NewAuthHandler(auth *service.AuthService, frontendURL string) *AuthHandler {
-	return &AuthHandler{auth: auth, frontendURL: frontendURL}
+func NewAuthHandler(auth *service.AuthService, frontendURL string, devMode bool) *AuthHandler {
+	return &AuthHandler{auth: auth, frontendURL: frontendURL, devMode: devMode}
 }
 
 type loginRequest struct {
@@ -33,6 +34,20 @@ func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 	}
 	if req.Email == "" {
 		response.Error(w, http.StatusBadRequest, "email is required")
+		return
+	}
+
+	// Dev mode: skip email, issue session token directly
+	if h.devMode {
+		token, err := h.auth.DevLogin(r.Context(), w, req.Email)
+		if err != nil {
+			response.Error(w, http.StatusInternalServerError, "failed to login")
+			return
+		}
+		response.JSON(w, http.StatusOK, map[string]string{
+			"message": "dev login successful",
+			"token":   token,
+		})
 		return
 	}
 

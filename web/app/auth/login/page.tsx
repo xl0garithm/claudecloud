@@ -15,7 +15,12 @@ export default function LoginPage() {
     setLoading(true);
 
     try {
-      await api.login(email);
+      const res = await api.login(email);
+      if (res.token) {
+        // Dev mode: logged in directly, redirect to dashboard
+        window.location.href = "/dashboard";
+        return;
+      }
       setSent(true);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to send magic link");

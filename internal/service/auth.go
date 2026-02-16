@@ -104,6 +104,44 @@ type UserResponse struct {
 	UsageHours         float64 `json:"usage_hours"`
 }
 
+// DevLogin finds or creates a user by email, then issues a session token
+// and sets the session cookie directly — skipping the magic link email.
+// Only use this in development mode.
+func (s *AuthService) DevLogin(ctx context.Context, w http.ResponseWriter, email string) (string, error) {
+	// Find or create user
+	u, err := s.db.User.Query().Where(entuser.EmailEQ(email)).Only(ctx)
+	if err != nil {
+		if ent.IsNotFound(err) {
+			u, err = s.db.User.Create().
+				SetEmail(email).
+				Save(ctx)
+			if err != nil {
+				return "", fmt.Errorf("create user: %w", err)
+			}
+		} else {
+			return "", fmt.Errorf("query user: %w", err)
+		}
+	}
+
+	// Generate session JWT (24h)
+	sessionToken, err := auth.GenerateToken(s.jwtSecret, u.ID, u.Email, "session", 24*time.Hour)
+	if err != nil {
+		return "", fmt.Errorf("generate session: %w", err)
+	}
+
+	// Set HttpOnly cookie
+	http.SetCookie(w, &http.Cookie{
+		Name:     "session",
+		Value:    sessionToken,
+		Path:     "/",
+		HttpOnly: true,
+		SameSite: http.SameSiteLaxMode,
+		MaxAge:   86400,
+	})
+
+	return sessionToken, nil
+}
+
 // GetCurrentUser returns the user info for the given user ID.
 func (s *AuthService) GetCurrentUser(ctx context.Context, userID int) (*UserResponse, error) {
 	u, err := s.db.User.Get(ctx, userID)
