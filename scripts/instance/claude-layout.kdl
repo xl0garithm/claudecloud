@@ -1,8 +1,9 @@
 // Zellij layout for Claude Code instances.
-// 70% main pane (Claude Code), 30% side pane (shell).
+// 70% main pane (Claude Code auto-starts), 30% side pane (shell).
 layout {
     pane split_direction="vertical" {
         pane size="70%" {
+            command "claude"
             name "claude"
         }
         pane size="30%" {

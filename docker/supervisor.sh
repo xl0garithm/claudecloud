@@ -9,7 +9,9 @@ set -u
 MAX_BACKOFF=30
 
 start_ttyd() {
-    ttyd -W -p 7681 zellij attach claude --create &
+    # Use start-session.sh which creates the session with the claude layout
+    # (including auto-starting Claude Code) or attaches if it already exists.
+    ttyd -W -p 7681 /home/claude/start-session.sh claude &
     TTYD_PID=$!
     echo "supervisor: started ttyd (pid=$TTYD_PID)" >&2
 }
