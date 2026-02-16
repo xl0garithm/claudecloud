@@ -2,15 +2,28 @@
 # Process supervisor for Claude instance containers.
 #
 # Architecture:
-#   Zellij — managed by connect.sh (run by ttyd per browser connection).
-#     First connection creates the session; subsequent ones attach. The Zellij
-#     server persists independently of browser connections.
+#   Zellij — session pre-created in background at startup. The server persists
+#     independently of browser connections. ttyd's connect.sh attaches clients.
 #   ttyd — web terminal that runs connect.sh per browser connection.
 #   agent — Node.js sidecar for chat, file browsing, project management, and
-#     creating Zellij project tabs.
+#     creating Zellij project tabs via IPC.
 set -u
 
 MAX_BACKOFF=30
+SESSION="main"
+
+# --- Zellij (background session) ---
+start_zellij() {
+    # Pre-create the session in the background so it's ready before any
+    # browser connects or the agent tries to create project tabs.
+    # Uses --create-background: creates a detached session if it doesn't exist.
+    if ! zellij list-sessions 2>/dev/null | grep -q "^${SESSION}"; then
+        zellij attach --create-background "${SESSION}" 2>&1 || true
+        echo "supervisor: created Zellij session '${SESSION}'" >&2
+    else
+        echo "supervisor: Zellij session '${SESSION}' already exists" >&2
+    fi
+}
 
 # --- ttyd (web terminal) ---
 start_ttyd() {
@@ -30,7 +43,8 @@ start_agent() {
 TTYD_BACKOFF=1
 AGENT_BACKOFF=1
 
-# Start processes
+# Start Zellij session first (agent needs it for tab creation)
+start_zellij
 start_ttyd
 start_agent
 
@@ -39,6 +53,12 @@ echo "supervisor: all processes started" >&2
 # Monitor loop
 while true; do
     sleep 5
+
+    # Check Zellij session is still alive
+    if ! zellij list-sessions 2>/dev/null | grep -q "^${SESSION}"; then
+        echo "supervisor: Zellij session gone, recreating" >&2
+        start_zellij
+    fi
 
     # Check ttyd
     if ! kill -0 "$TTYD_PID" 2>/dev/null; then

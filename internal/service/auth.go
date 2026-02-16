@@ -243,7 +243,7 @@ func (s *AuthService) GetClaudeCredentials(ctx context.Context, userID int) (str
 	}
 	// OAuth token takes priority (uses Max/Pro subscription billing)
 	if u.ClaudeOauthToken != nil && *u.ClaudeOauthToken != "" {
-		return "CLAUDE_CODE_OAUTH_TOKEN", *u.ClaudeOauthToken, nil
+		return "ANTHROPIC_AUTH_TOKEN", *u.ClaudeOauthToken, nil
 	}
 	if u.AnthropicAPIKey != nil && *u.AnthropicAPIKey != "" {
 		return "ANTHROPIC_API_KEY", *u.AnthropicAPIKey, nil

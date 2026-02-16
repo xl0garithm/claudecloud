@@ -178,7 +178,13 @@ app.post("/tabs", (req, res) => {
     { env: { ...process.env, ZELLIJ_SESSION_NAME: session }, timeout: 5000 },
     (err, stdout) => {
       if (!err && stdout.includes(name)) {
-        // Tab already exists — just report success
+        // Tab already exists — switch to it and report success
+        execFile(
+          "zellij",
+          ["action", "go-to-tab-name", name],
+          { env: { ...process.env, ZELLIJ_SESSION_NAME: session }, timeout: 5000 },
+          () => {} // best-effort
+        );
         return res.json({ status: "exists", tab: name });
       }
 
