@@ -9,10 +9,11 @@ set -u
 MAX_BACKOFF=30
 
 start_ttyd() {
-    # Try attaching to existing session; if none exists, create with layout.
-    # The layout includes `command "claude"` so Claude Code auto-starts.
-    # Older Zellij doesn't support -l on attach, so we use || fallback.
-    ttyd -W -p 7681 sh -c 'zellij attach claude 2>/dev/null || zellij --session claude --layout claude' &
+    # Create a new Zellij session with the Claude layout, or attach to existing one.
+    # Order matters: CREATE first so new sessions get the layout (with Claude Code auto-start).
+    # If the session already exists, creation fails (stderr suppressed) and we attach instead.
+    # Using full path for layout to avoid resolution issues.
+    ttyd -W -p 7681 sh -c 'zellij -s claude -l /home/claude/.config/zellij/layouts/claude.kdl 2>/dev/null || zellij attach claude' &
     TTYD_PID=$!
     echo "supervisor: started ttyd (pid=$TTYD_PID)" >&2
 }
