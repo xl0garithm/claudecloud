@@ -60,6 +60,19 @@ export interface ChatMessageRecord {
   created_at: string;
 }
 
+export interface SessionInfo {
+  project: string;
+  tab: string;
+  status: "working" | "idle" | "none";
+  cwd: string;
+}
+
+export interface ConversationInfo {
+  id: string;
+  title: string;
+  updatedAt: string | null;
+}
+
 async function apiFetch<T>(path: string, options?: RequestInit): Promise<T> {
   const res = await fetch(`${API_BASE}${path}`, {
     credentials: "include",
@@ -181,13 +194,36 @@ export const api = {
   },
 
   // Zellij tabs
-  createTab(instanceId: number, name: string, cwd?: string, command?: string) {
+  createTab(instanceId: number, name: string, cwd?: string, options?: { resume?: boolean; conversationId?: string }) {
     return apiFetch<{ status: string; tab: string }>(
       `/instances/${instanceId}/tabs`,
       {
         method: "POST",
-        body: JSON.stringify({ name, cwd: cwd || undefined, command: command || undefined }),
+        body: JSON.stringify({
+          name,
+          cwd: cwd || undefined,
+          resume: options?.resume,
+          conversationId: options?.conversationId,
+        }),
       }
+    );
+  },
+
+  deleteTab(instanceId: number, name: string) {
+    return apiFetch<{ status: string; tab: string }>(
+      `/instances/${instanceId}/tabs/${encodeURIComponent(name)}`,
+      { method: "DELETE" }
+    );
+  },
+
+  // Sessions
+  getSessions(instanceId: number) {
+    return apiFetch<SessionInfo[]>(`/instances/${instanceId}/sessions`);
+  },
+
+  getSessionConversations(instanceId: number, project: string) {
+    return apiFetch<ConversationInfo[]>(
+      `/instances/${instanceId}/sessions/${encodeURIComponent(project)}/conversations`
     );
   },
 
