@@ -169,11 +169,14 @@ func (s *InstanceService) Get(ctx context.Context, id int) (*InstanceResponse, e
 		return nil, fmt.Errorf("get instance: %w", err)
 	}
 
-	// Optionally refresh status from provider
+	// Refresh status from provider
 	if inst.Status != "destroyed" && inst.ProviderID != "" {
 		provInst, err := s.provider.Status(ctx, inst.ProviderID)
 		if err == nil && string(provInst.Status) != inst.Status {
 			inst, _ = inst.Update().SetStatus(string(provInst.Status)).Save(ctx)
+		} else if errors.Is(err, provider.ErrNotFound) {
+			// Container was removed externally — mark as destroyed
+			inst, _ = inst.Update().SetStatus("destroyed").Save(ctx)
 		}
 	}
 

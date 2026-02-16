@@ -6,6 +6,7 @@ interface InstanceCardProps {
   instance: Instance;
   onPause: () => void;
   onWake: () => void;
+  onDelete: () => void;
   loading?: boolean;
 }
 
@@ -20,6 +21,7 @@ export default function InstanceCard({
   instance,
   onPause,
   onWake,
+  onDelete,
   loading,
 }: InstanceCardProps) {
   const colorClass = statusColors[instance.status] || "bg-gray-100 text-gray-800";
@@ -79,6 +81,13 @@ export default function InstanceCard({
             {loading ? "..." : "Wake"}
           </button>
         )}
+        <button
+          onClick={onDelete}
+          disabled={loading}
+          className="rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-red-700 disabled:opacity-50"
+        >
+          {loading ? "..." : "Delete"}
+        </button>
       </div>
     </div>
   );

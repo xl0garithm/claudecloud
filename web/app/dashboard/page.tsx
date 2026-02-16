@@ -69,6 +69,20 @@ export default function DashboardPage() {
     }
   }
 
+  async function handleDelete() {
+    if (!instance) return;
+    setLoading(true);
+    setError("");
+    try {
+      await api.deleteInstance(instance.id);
+      setInstance(null);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to delete");
+    } finally {
+      setLoading(false);
+    }
+  }
+
   async function handleCheckout(plan: string) {
     try {
       const { url } = await api.createCheckout(plan);
@@ -133,6 +147,7 @@ export default function DashboardPage() {
           instance={instance}
           onPause={handlePause}
           onWake={handleWake}
+          onDelete={handleDelete}
           loading={loading}
         />
       ) : (

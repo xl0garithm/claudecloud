@@ -81,6 +81,12 @@ export const api = {
     return apiFetch<Instance>("/instances/mine");
   },
 
+  deleteInstance(id: number) {
+    return apiFetch<{ status: string }>(`/instances/${id}`, {
+      method: "DELETE",
+    });
+  },
+
   createInstance() {
     return apiFetch<Instance>("/instances", {
       method: "POST",
