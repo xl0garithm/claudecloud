@@ -10,11 +10,11 @@
 SESSION="main"
 LAYOUT="/home/claude/.config/zellij/layouts/claude.kdl"
 
-# Check if the session already exists
+# Try to attach to an existing session
 if zellij list-sessions 2>/dev/null | grep -q "^${SESSION}"; then
     exec zellij attach "${SESSION}"
 fi
 
-# Session doesn't exist — create it with the layout.
-# Zellij forks a server process that persists after this client exits.
-exec zellij --session "${SESSION}" --layout "${LAYOUT}"
+# No existing session — create one with the Claude layout.
+# `-s` names the session; `--layout` loads the pane arrangement.
+exec zellij -s "${SESSION}" --layout "${LAYOUT}"
