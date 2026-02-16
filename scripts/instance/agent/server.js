@@ -160,6 +160,57 @@ app.post("/projects/clone", (req, res) => {
   });
 });
 
+// --- POST /tabs — Create a Zellij tab for a project ---
+app.post("/tabs", (req, res) => {
+  const { name, cwd, command } = req.body;
+  if (!name || typeof name !== "string") {
+    return res.status(400).json({ error: "name is required" });
+  }
+
+  const tabCwd = safePath(cwd || "") || DATA_ROOT;
+  const tabCommand = command || "claude";
+  const session = "main";
+
+  // Check if a tab with this name already exists by querying Zellij
+  execFile(
+    "zellij",
+    ["action", "query-tab-names"],
+    { env: { ...process.env, ZELLIJ_SESSION_NAME: session }, timeout: 5000 },
+    (err, stdout) => {
+      if (!err && stdout.includes(name)) {
+        // Tab already exists — just report success
+        return res.json({ status: "exists", tab: name });
+      }
+
+      // Create a new tab
+      execFile(
+        "zellij",
+        ["action", "new-tab", "--name", name, "--cwd", tabCwd],
+        { env: { ...process.env, ZELLIJ_SESSION_NAME: session }, timeout: 5000 },
+        (err) => {
+          if (err) {
+            return res.status(500).json({ error: "failed to create tab: " + err.message });
+          }
+
+          // Start the command in the new tab
+          if (tabCommand) {
+            execFile(
+              "zellij",
+              ["action", "write-chars", tabCommand + "\n"],
+              { env: { ...process.env, ZELLIJ_SESSION_NAME: session }, timeout: 5000 },
+              () => {
+                // Best-effort — don't fail if write-chars has issues
+              }
+            );
+          }
+
+          res.json({ status: "created", tab: name });
+        }
+      );
+    }
+  );
+});
+
 // --- HTTP + WebSocket server ---
 const server = http.createServer(app);
 const wss = new WebSocketServer({ server, path: "/chat" });

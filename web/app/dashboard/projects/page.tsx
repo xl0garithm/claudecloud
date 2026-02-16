@@ -91,7 +91,7 @@ export default function ProjectsPage() {
         ) : (
           <div className="space-y-3">
             {projects.map((project) => (
-              <ProjectCard key={project.path} project={project} />
+              <ProjectCard key={project.path} project={project} instance={instance} />
             ))}
           </div>
         )}

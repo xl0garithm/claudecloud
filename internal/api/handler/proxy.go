@@ -214,6 +214,11 @@ func (h *ProxyHandler) ProjectsClone(w http.ResponseWriter, r *http.Request) {
 	h.proxyHTTP(w, r, "/projects/clone")
 }
 
+// Tabs proxies POST /instances/{id}/tabs to the agent.
+func (h *ProxyHandler) Tabs(w http.ResponseWriter, r *http.Request) {
+	h.proxyHTTP(w, r, "/tabs")
+}
+
 // proxyHTTP is a helper that reverse-proxies an HTTP request to the instance agent.
 func (h *ProxyHandler) proxyHTTP(w http.ResponseWriter, r *http.Request, agentPath string) {
 	_, span := proxyTracer.Start(r.Context(), "proxy.files")

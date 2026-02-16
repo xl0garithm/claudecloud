@@ -180,6 +180,17 @@ export const api = {
     );
   },
 
+  // Zellij tabs
+  createTab(instanceId: number, name: string, cwd?: string, command?: string) {
+    return apiFetch<{ status: string; tab: string }>(
+      `/instances/${instanceId}/tabs`,
+      {
+        method: "POST",
+        body: JSON.stringify({ name, cwd: cwd || undefined, command: command || undefined }),
+      }
+    );
+  },
+
   // Conversations
   getOrCreateConversation(projectPath: string) {
     return apiFetch<Conversation>(
