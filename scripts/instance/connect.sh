@@ -1,24 +1,30 @@
 #!/bin/bash
-# Connect to the persistent Zellij session — DEBUG VERSION
-# Diagnostic output goes to the web terminal so we can see what's happening.
+# Connect to the persistent Zellij session — DEBUG VERSION 2
+# Testing different approaches to create a session in Zellij 0.43.1
 
 SESSION="main"
 LAYOUT="/home/claude/.config/zellij/layouts/claude.kdl"
 
-echo "=== connect.sh debug ==="
-echo "zellij version: $(zellij --version 2>&1)"
-echo "layout exists: $(test -f "${LAYOUT}" && echo YES || echo NO)"
-echo "layout path: ${LAYOUT}"
-echo "list-sessions output:"
-zellij list-sessions 2>&1
-echo "---"
-echo "list-sessions exit code: $?"
-echo "whoami: $(whoami)"
-echo "tty: $(tty 2>&1)"
-echo "TERM: ${TERM}"
-echo "=== attempting session create ==="
-echo "command: zellij -s ${SESSION} --layout ${LAYOUT}"
-zellij -s "${SESSION}" --layout "${LAYOUT}" 2>&1
-echo "=== zellij exited with code: $? ==="
-echo "Sleeping 30s so you can read this..."
-sleep 30
+echo "=== Zellij 0.43.1 CLI tests ==="
+echo ""
+
+echo "--- Test 1: zellij --help (top-level flags) ---"
+zellij --help 2>&1 | head -40
+echo ""
+
+echo "--- Test 2: zellij attach --help ---"
+zellij attach --help 2>&1 | head -30
+echo ""
+
+echo "--- Test 3: zellij attach --create ${SESSION} (no layout) ---"
+timeout 5 zellij attach --create "${SESSION}" 2>&1 || true
+echo "(exit: $?)"
+echo ""
+
+echo "--- Test 4: plain zellij --layout ${LAYOUT} ---"
+timeout 5 zellij --layout "${LAYOUT}" 2>&1 || true
+echo "(exit: $?)"
+echo ""
+
+echo "Sleeping 60s so you can read this..."
+sleep 60
