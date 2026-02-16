@@ -41,6 +41,7 @@ type CreateOptions struct {
 // ActivityInfo holds activity data for an instance.
 type ActivityInfo struct {
 	IsActive     bool
+	IsHealthy    bool
 	ProcessCount int
 }
 

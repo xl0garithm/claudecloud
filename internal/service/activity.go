@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"log/slog"
+	"sync"
 	"time"
 
 	"github.com/logan/cloudcode/internal/ent"
@@ -19,6 +20,9 @@ type ActivityService struct {
 	idleThreshold time.Duration
 	stopCh        chan struct{}
 	onActive      func(ctx context.Context, inst *ent.Instance) // usage callback
+
+	// Track consecutive health check failures per instance
+	healthFailures sync.Map // map[int]int (instance ID → consecutive failures)
 }
 
 // SetOnActive sets a callback invoked when an instance is detected as active.
@@ -95,6 +99,23 @@ func (a *ActivityService) checkInstance(ctx context.Context, inst *ent.Instance,
 		return
 	}
 
+	// Track health check failures
+	if !info.IsHealthy {
+		var failures int
+		if v, ok := a.healthFailures.Load(inst.ID); ok {
+			failures = v.(int)
+		}
+		failures++
+		a.healthFailures.Store(inst.ID, failures)
+
+		if failures >= 3 {
+			a.logger.Warn("instance unhealthy for 3 consecutive checks",
+				"instance_id", inst.ID, "provider_id", inst.ProviderID)
+		}
+	} else {
+		a.healthFailures.Delete(inst.ID)
+	}
+
 	if info.IsActive {
 		// Update last_activity_at
 		_, err := inst.Update().SetLastActivityAt(now).Save(ctx)
@@ -123,6 +144,7 @@ func (a *ActivityService) checkInstance(ctx context.Context, inst *ent.Instance,
 			return
 		}
 		_, _ = inst.Update().SetStatus("stopped").Save(ctx)
+		a.healthFailures.Delete(inst.ID)
 	}
 }
 

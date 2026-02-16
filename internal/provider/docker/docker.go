@@ -218,7 +218,8 @@ func (p *Provider) Wake(ctx context.Context, instanceID string) error {
 }
 
 // Activity checks if the container has active processes beyond the base set.
-// Docker: active if process count > 6 (entrypoint + tail + zellij + ttyd + node agent + shell).
+// Docker: active if process count > 6 (supervisor + zellij + ttyd + node agent + shell + sleep).
+// Also checks Docker HEALTHCHECK status if configured.
 func (p *Provider) Activity(ctx context.Context, instanceID string) (*provider.ActivityInfo, error) {
 	top, err := p.cli.ContainerTop(ctx, instanceID, nil)
 	if err != nil {
@@ -229,8 +230,21 @@ func (p *Provider) Activity(ctx context.Context, instanceID string) (*provider.A
 	}
 
 	processCount := len(top.Processes)
+	isActive := processCount > 6
+
+	// Check container health status
+	isHealthy := true
+	info, err := p.cli.ContainerInspect(ctx, instanceID)
+	if err == nil && info.State.Health != nil {
+		isHealthy = info.State.Health.Status == "healthy"
+		if !isHealthy {
+			isActive = false
+		}
+	}
+
 	return &provider.ActivityInfo{
-		IsActive:     processCount > 6,
+		IsActive:     isActive,
+		IsHealthy:    isHealthy,
 		ProcessCount: processCount,
 	}, nil
 }

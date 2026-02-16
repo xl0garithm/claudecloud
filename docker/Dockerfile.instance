@@ -7,7 +7,8 @@ COPY scripts/instance/setup.sh /opt/cloudcode/setup.sh
 COPY scripts/instance/start-session.sh /opt/cloudcode/start-session.sh
 COPY scripts/instance/claude-layout.kdl /opt/cloudcode/claude-layout.kdl
 COPY docker/entrypoint.sh /entrypoint.sh
-RUN chmod +x /opt/cloudcode/setup.sh /opt/cloudcode/start-session.sh /entrypoint.sh
+COPY docker/supervisor.sh /supervisor.sh
+RUN chmod +x /opt/cloudcode/setup.sh /opt/cloudcode/start-session.sh /entrypoint.sh /supervisor.sh
 
 # Run the idempotent setup script
 RUN /opt/cloudcode/setup.sh
@@ -27,6 +28,11 @@ RUN cd /opt/cloudcode/agent && npm install --production
 
 # Expose mosh UDP ports, ttyd, and agent
 EXPOSE 60000-60010/udp 7681 3001
+
+# Health check: verify ttyd and agent are responding
+HEALTHCHECK --interval=30s --timeout=5s --retries=3 \
+    CMD curl -sf http://localhost:7681/ > /dev/null && \
+        curl -sf -H "Authorization: Bearer $AGENT_SECRET" http://localhost:3001/projects > /dev/null || exit 1
 
 USER claude
 WORKDIR /claude-data

@@ -110,9 +110,9 @@ func (m *MockProvisioner) Activity(ctx context.Context, instanceID string) (*Act
 		return nil, ErrNotFound
 	}
 	if m.inactive[instanceID] {
-		return &ActivityInfo{IsActive: false, ProcessCount: 2}, nil
+		return &ActivityInfo{IsActive: false, IsHealthy: true, ProcessCount: 2}, nil
 	}
-	return &ActivityInfo{IsActive: true, ProcessCount: 5}, nil
+	return &ActivityInfo{IsActive: true, IsHealthy: true, ProcessCount: 5}, nil
 }
 
 // SetInactive marks an instance as inactive for testing.

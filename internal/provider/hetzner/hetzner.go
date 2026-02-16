@@ -233,7 +233,7 @@ func (p *Provider) Activity(ctx context.Context, instanceID string) (*provider.A
 		return nil, err
 	}
 	isActive := inst.Status == provider.StatusRunning
-	return &provider.ActivityInfo{IsActive: isActive}, nil
+	return &provider.ActivityInfo{IsActive: isActive, IsHealthy: isActive}, nil
 }
 
 // Wake recreates the server from the latest snapshot.
