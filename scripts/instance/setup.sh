@@ -44,7 +44,12 @@ fi
 # Zellij
 if ! command -v zellij &>/dev/null; then
     echo "Installing Zellij..."
-    curl -fsSL https://github.com/zellij-org/zellij/releases/latest/download/zellij-x86_64-unknown-linux-musl.tar.gz \
+    ARCH=$(uname -m)
+    case "$ARCH" in
+        aarch64|arm64) ZELLIJ_ARCH="aarch64-unknown-linux-musl" ;;
+        *)             ZELLIJ_ARCH="x86_64-unknown-linux-musl" ;;
+    esac
+    curl -fsSL "https://github.com/zellij-org/zellij/releases/latest/download/zellij-${ZELLIJ_ARCH}.tar.gz" \
         | tar -xz -C /usr/local/bin
 else
     echo "Zellij already installed: $(zellij --version)"
@@ -69,7 +74,12 @@ chown -R claude:claude /home/claude/.config
 # ttyd (web terminal)
 if ! command -v ttyd &>/dev/null; then
     echo "Installing ttyd..."
-    curl -fsSL https://github.com/tsl0922/ttyd/releases/latest/download/ttyd.x86_64 \
+    ARCH=$(uname -m)
+    case "$ARCH" in
+        aarch64|arm64) TTYD_ARCH="aarch64" ;;
+        *)             TTYD_ARCH="x86_64" ;;
+    esac
+    curl -fsSL "https://github.com/tsl0922/ttyd/releases/latest/download/ttyd.${TTYD_ARCH}" \
         -o /usr/local/bin/ttyd
     chmod +x /usr/local/bin/ttyd
 else

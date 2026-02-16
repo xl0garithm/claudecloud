@@ -56,7 +56,7 @@ export default function WebTerminal({ instanceId }: WebTerminalProps) {
     setStatus("connecting");
 
     const wsUrl = createAuthWsUrl(`/instances/${instanceId}/terminal`);
-    const ws = new WebSocket(wsUrl);
+    const ws = new WebSocket(wsUrl, ["tty"]);
     ws.binaryType = "arraybuffer";
     wsRef.current = ws;
 

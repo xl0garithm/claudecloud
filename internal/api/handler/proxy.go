@@ -31,7 +31,8 @@ func NewProxyHandler(svc *service.InstanceService, jwtSecret string) *ProxyHandl
 }
 
 var upgrader = websocket.Upgrader{
-	CheckOrigin: func(r *http.Request) bool { return true },
+	CheckOrigin:  func(r *http.Request) bool { return true },
+	Subprotocols: []string{"tty"},
 }
 
 // extractUserID gets the user ID from context (middleware) or ?token= query param (WebSocket fallback).
@@ -89,9 +90,12 @@ func (h *ProxyHandler) Terminal(w http.ResponseWriter, r *http.Request) {
 	}
 	defer clientConn.Close()
 
-	// Connect to ttyd
+	// Connect to ttyd — must negotiate the "tty" subprotocol
 	targetURL := "ws://" + host + ":7681/ws"
-	backendConn, _, err := websocket.DefaultDialer.Dial(targetURL, nil)
+	ttydDialer := websocket.Dialer{
+		Subprotocols: []string{"tty"},
+	}
+	backendConn, _, err := ttydDialer.Dial(targetURL, nil)
 	if err != nil {
 		slog.Error("terminal proxy: backend dial failed", "host", host, "error", err)
 		clientConn.WriteMessage(websocket.CloseMessage,
