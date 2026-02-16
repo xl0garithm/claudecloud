@@ -243,3 +243,67 @@ The dashboard layout (`app/dashboard/layout.tsx`) renders four tabs: Overview, T
 The instance agent scans `/claude-data/` for `.git` directories (up to 3 levels deep) and reads the git remote URL from `.git/config`. Each project is returned as `{ name, path, remoteUrl }`. The "Open in Chat" button navigates to `/dashboard/chat?cwd={path}`, which sets the Claude Code working directory.
 
 This approach avoids syncing project metadata between the database and filesystem. The instance always reports its current state, and clone operations are idempotent (git clone will fail if the directory already exists, giving the user a clear error).
+
+---
+
+## Phase 5: Reliability, Security & Launch
+
+### Structured Logging (slog Migration)
+
+**Pattern**: Replace stdlib `log.Logger` with Go 1.21's `log/slog` for structured, leveled logging.
+
+Every service that previously accepted `*log.Logger` was migrated to `*slog.Logger`. In production (`ENVIRONMENT=production`), the handler is `slog.NewJSONHandler` for machine-parsable output. In development, `slog.NewTextHandler` produces human-readable key=value lines.
+
+Structured fields are passed as typed key-value pairs: `logger.Info("instance created", "instance_id", id, "user_id", uid)`. This eliminates string formatting and makes log aggregation trivial — you can filter by `instance_id` or `user_id` without regex. The logger propagates from `main.go` through service constructors, so every component shares the same handler configuration.
+
+### Security Headers Middleware
+
+**Pattern**: Set defensive HTTP headers on every response via a global middleware.
+
+The `Security` middleware in `internal/api/middleware/security.go` adds six headers to every response: `X-Content-Type-Options: nosniff` (prevents MIME sniffing), `X-Frame-Options: DENY` (prevents clickjacking), `Referrer-Policy: strict-origin-when-cross-origin`, `X-XSS-Protection: 0` (modern browsers handle this natively), and `Permissions-Policy: camera=(), microphone=()`. When the `BASE_URL` starts with `https`, it also sets `Strict-Transport-Security: max-age=31536000; includeSubDomains` to enforce HTTPS. The HSTS check is conditional because adding it in development (HTTP) would cause browsers to refuse non-HTTPS connections.
+
+### Rate Limiting (Token Bucket)
+
+**Pattern**: Per-IP token bucket rate limiting using `golang.org/x/time/rate` — no Redis needed at this scale.
+
+The `RateLimit` middleware creates a per-IP `*rate.Limiter` stored in a `sync.Map`. Each limiter allows a configurable rate (tokens per second) with a burst capacity. Two tiers are applied: auth endpoints (`/auth/login`) get 5 requests/minute (prevents brute force), while authenticated API routes get 60 requests/minute. A background goroutine cleans up stale entries every 3 minutes (any IP not seen for 5 minutes is evicted). When a request exceeds the rate, a `429 Too Many Requests` response is returned with a `Retry-After` header.
+
+This approach is appropriate for the target of 50 users. A distributed rate limiter (Redis-backed) would be needed at higher scale, but the in-memory approach avoids an infrastructure dependency.
+
+### Config Validation (Fail-Fast)
+
+**Pattern**: Validate critical configuration at startup and refuse to start if production config is incomplete.
+
+The `Validate()` method on `Config` checks invariants only in production mode (`ENVIRONMENT=production`). It verifies that `JWT_SECRET` is not the default insecure value, `DATABASE_URL` is set, and `STRIPE_SECRET_KEY` is present (required for billing). Errors are collected and returned as a single multi-line error. In development mode, `Validate()` returns nil — insecure defaults are fine for local testing.
+
+This prevents deploying a production instance with forgotten configuration. The check runs immediately after `config.Load()` and before any network listeners start, so the process exits cleanly with a descriptive error message.
+
+### Process Supervision (Instance Reliability)
+
+**Pattern**: Simple bash process supervisor with exponential backoff replaces raw backgrounding.
+
+The `docker/supervisor.sh` script manages the three long-running processes inside each instance container: ttyd (web terminal), the Node.js agent, and Zellij. It starts each process, records its PID, then monitors every 5 seconds. If a process exits, it restarts with exponential backoff (1s, 2s, 4s, ... up to 30s), resetting the backoff on successful restart. This is simpler and lighter than supervisord, keeping the container image small.
+
+The Docker instance image also gained a `HEALTHCHECK` directive that probes both ttyd (port 7681) and the agent (port 3001). The Docker provider's `Activity()` method now inspects the container health status — if the container reports "unhealthy", it's treated as inactive regardless of process count.
+
+### Instance Health Monitoring
+
+**Pattern**: Track consecutive health check failures to detect persistently degraded instances.
+
+The `ActivityService` was extended to check agent reachability alongside its existing activity polling. A `sync.Map` tracks consecutive health failures per instance. After 3 consecutive failures, a warning is logged. The `ActivityInfo` struct gained an `IsHealthy` field that providers set based on container health status (Docker) or server running state (Hetzner).
+
+### OpenTelemetry Tracing + Metrics
+
+**Pattern**: Single OTEL SDK for both distributed tracing and Prometheus metrics.
+
+The `internal/telemetry` package bootstraps both a `TracerProvider` and a `MeterProvider` from a single `Init()` call. The trace provider uses an OTLP HTTP exporter when `OTEL_EXPORTER_OTLP_ENDPOINT` is set; otherwise traces are discarded (dev mode). The meter provider uses a Prometheus exporter, exposing metrics at `/metrics` in Prometheus text format.
+
+Three layers of instrumentation work together:
+
+1. **Auto-instrumentation**: The `otelhttp` middleware wraps the Chi router, creating a span for every HTTP request with method, route, and status code attributes.
+
+2. **Manual spans**: Key business operations — instance create/delete/pause/wake, billing checkout/webhook, proxy terminal/chat/files — create child spans with relevant attributes (user_id, instance_id, plan). Errors are recorded on the span via `span.RecordError()` and `span.SetStatus(codes.Error)`.
+
+3. **Log correlation**: The `tracelog` middleware extracts `trace_id` and `span_id` from the OTEL span context and injects them into `slog` via `slog.With()`. All subsequent log lines within a request carry these fields, enabling log-to-trace correlation in observability tools.
+
+Custom meters in the activity service track `cloudcode.instances.total` (UpDownCounter by status) and `cloudcode.instances.active` (UpDownCounter), updated each poll cycle. The W3C TraceContext propagator enables distributed tracing across service boundaries.

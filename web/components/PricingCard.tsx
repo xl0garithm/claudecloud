@@ -7,6 +7,7 @@ interface PricingCardProps {
   features: string[];
   cta: string;
   highlighted?: boolean;
+  badge?: string;
   onSelect: () => void;
 }
 
@@ -17,16 +18,22 @@ export default function PricingCard({
   features,
   cta,
   highlighted,
+  badge,
   onSelect,
 }: PricingCardProps) {
   return (
     <div
-      className={`rounded-2xl p-8 ${
+      className={`relative rounded-2xl p-8 ${
         highlighted
           ? "bg-gray-900 text-white ring-2 ring-gray-900"
           : "bg-white ring-1 ring-gray-200"
       }`}
     >
+      {badge && (
+        <span className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-green-500 px-3 py-1 text-xs font-semibold text-white">
+          {badge}
+        </span>
+      )}
       <h3 className="text-lg font-semibold">{name}</h3>
       <div className="mt-4 flex items-baseline gap-1">
         <span className="text-4xl font-bold">{price}</span>
