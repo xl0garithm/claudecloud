@@ -1,22 +1,33 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
-import { api, Instance, Project } from "@/lib/api";
+import { useEffect, useState, useCallback, useRef } from "react";
+import { api, Instance, Project, SessionInfo } from "@/lib/api";
 import ProjectCard from "@/components/ProjectCard";
 import CloneRepoForm from "@/components/CloneRepoForm";
 
 export default function ProjectsPage() {
   const [instance, setInstance] = useState<Instance | null>(null);
   const [projects, setProjects] = useState<Project[]>([]);
+  const [sessions, setSessions] = useState<SessionInfo[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const pollRef = useRef<ReturnType<typeof setInterval>>();
 
   const loadProjects = useCallback(async (inst: Instance) => {
     try {
       const projs = await api.getProjects(inst.id);
       setProjects(projs);
     } catch {
-      // Instance may not be running — ignore
+      // Instance may not be running
+    }
+  }, []);
+
+  const loadSessions = useCallback(async (inst: Instance) => {
+    try {
+      const sess = await api.getSessions(inst.id);
+      setSessions(sess);
+    } catch {
+      // Ignore polling errors
     }
   }, []);
 
@@ -27,18 +38,29 @@ export default function ProjectsPage() {
         setInstance(inst);
         if (inst.status === "running") {
           loadProjects(inst);
+          loadSessions(inst);
+          // Poll sessions every 5 seconds
+          pollRef.current = setInterval(() => loadSessions(inst), 5000);
         }
       })
       .catch((err) => {
         setError(err instanceof Error ? err.message : "Failed to load instance");
       })
       .finally(() => setLoading(false));
-  }, [loadProjects]);
+
+    return () => {
+      if (pollRef.current) clearInterval(pollRef.current);
+    };
+  }, [loadProjects, loadSessions]);
 
   async function handleClone(url: string, branch?: string) {
     if (!instance) return;
     await api.cloneProject(instance.id, url, branch);
     await loadProjects(instance);
+  }
+
+  function getSessionForProject(project: Project): SessionInfo | undefined {
+    return sessions.find((s) => s.project === project.name);
   }
 
   if (loading) {
@@ -91,7 +113,12 @@ export default function ProjectsPage() {
         ) : (
           <div className="space-y-3">
             {projects.map((project) => (
-              <ProjectCard key={project.path} project={project} instance={instance} />
+              <ProjectCard
+                key={project.path}
+                project={project}
+                instance={instance}
+                session={getSessionForProject(project)}
+              />
             ))}
           </div>
         )}

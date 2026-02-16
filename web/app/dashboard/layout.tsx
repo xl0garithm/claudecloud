@@ -7,9 +7,8 @@ import { api, User } from "@/lib/api";
 
 const navTabs = [
   { label: "Overview", href: "/dashboard" },
-  { label: "Terminal", href: "/dashboard/terminal" },
-  { label: "Chat", href: "/dashboard/chat" },
   { label: "Projects", href: "/dashboard/projects" },
+  { label: "Terminal", href: "/dashboard/terminal" },
   { label: "Settings", href: "/dashboard/settings" },
 ];
 

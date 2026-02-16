@@ -1,10 +1,13 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { api, Instance } from "@/lib/api";
 import WebTerminal from "@/components/WebTerminal";
 
-export default function TerminalPage() {
+function TerminalContent() {
+  const searchParams = useSearchParams();
+  const tab = searchParams.get("tab");
   const [instance, setInstance] = useState<Instance | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -12,12 +15,20 @@ export default function TerminalPage() {
   useEffect(() => {
     api
       .getMyInstance()
-      .then(setInstance)
+      .then((inst) => {
+        setInstance(inst);
+        // If a tab param is provided, switch Zellij focus to it
+        if (tab && inst.status === "running") {
+          api.createTab(inst.id, tab, tab).catch(() => {
+            // Best-effort tab switch
+          });
+        }
+      })
       .catch((err) => {
         setError(err instanceof Error ? err.message : "Failed to load instance");
       })
       .finally(() => setLoading(false));
-  }, []);
+  }, [tab]);
 
   if (loading) {
     return (
@@ -59,5 +70,19 @@ export default function TerminalPage() {
     <div className="h-[calc(100vh-8rem)] overflow-hidden rounded-lg ring-1 ring-gray-200">
       <WebTerminal instanceId={instance.id} />
     </div>
+  );
+}
+
+export default function TerminalPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="flex h-[calc(100vh-8rem)] items-center justify-center">
+          <div className="text-gray-500">Loading instance...</div>
+        </div>
+      }
+    >
+      <TerminalContent />
+    </Suspense>
   );
 }
