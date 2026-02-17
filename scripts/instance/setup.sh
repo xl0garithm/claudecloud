@@ -23,12 +23,17 @@ fi
 locale-gen en_US.UTF-8 2>/dev/null || true
 export LANG=en_US.UTF-8
 
-# Node.js 20
+# Node.js 20 (direct binary — NodeSource setup scripts are deprecated)
 if ! command -v node &>/dev/null; then
     echo "Installing Node.js 20..."
-    curl -fsSL https://deb.nodesource.com/setup_20.x | bash -
-    apt-get install -y nodejs
-    rm -rf /var/lib/apt/lists/*
+    ARCH=$(uname -m)
+    case "$ARCH" in
+        aarch64|arm64) NODE_ARCH="linux-arm64" ;;
+        *)             NODE_ARCH="linux-x64" ;;
+    esac
+    NODE_VERSION="v20.18.3"
+    curl -fsSL "https://nodejs.org/dist/${NODE_VERSION}/node-${NODE_VERSION}-${NODE_ARCH}.tar.xz" \
+        | tar -xJ --strip-components=1 -C /usr/local
 else
     echo "Node.js already installed: $(node --version)"
 fi
