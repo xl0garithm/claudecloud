@@ -108,6 +108,7 @@ func NewRouter(cfg *config.Config, svcs *Services) http.Handler {
 			r.Get("/{id}/sessions", proxyH.Sessions)
 			r.Get("/{id}/sessions/{project}/conversations", proxyH.SessionConversations)
 			r.Delete("/{id}/tabs/{name}", proxyH.DeleteTab)
+			r.Get("/{id}/auth/status", proxyH.AuthStatus)
 		})
 
 		// Conversation routes

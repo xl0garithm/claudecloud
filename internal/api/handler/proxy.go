@@ -236,6 +236,11 @@ func (h *ProxyHandler) DeleteTab(w http.ResponseWriter, r *http.Request) {
 	h.proxyHTTP(w, r, "/tabs/"+name)
 }
 
+// AuthStatus proxies GET /instances/{id}/auth/status to the agent.
+func (h *ProxyHandler) AuthStatus(w http.ResponseWriter, r *http.Request) {
+	h.proxyHTTP(w, r, "/auth/status")
+}
+
 // proxyHTTP is a helper that reverse-proxies an HTTP request to the instance agent.
 func (h *ProxyHandler) proxyHTTP(w http.ResponseWriter, r *http.Request, agentPath string) {
 	_, span := proxyTracer.Start(r.Context(), "proxy.files")
