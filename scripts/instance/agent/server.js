@@ -528,15 +528,35 @@ function pollAuthUrl() {
     return;
   }
 
+  // Switch to _auth tab, dump screen, look for URLs
   zellijAction(["go-to-tab-name", AUTH_TAB], (err) => {
-    if (err) return;
+    if (err) {
+      console.error("auth poll: failed to switch to _auth tab:", err.message);
+      return;
+    }
     const dumpPath = "/tmp/auth-dump-" + process.pid + ".txt";
-    zellijAction(["dump-screen", dumpPath, "--full"], (err) => {
+    zellijAction(["dump-screen", dumpPath], (err) => {
+      // Switch back to shell so user sees shell if they connect
       zellijAction(["go-to-tab-name", "shell"], () => {});
-      if (err) return;
-      fs.readFile(dumpPath, "utf-8", (err, content) => {
+
+      if (err) {
+        console.error("auth poll: dump-screen failed:", err.message);
+        return;
+      }
+      fs.readFile(dumpPath, "utf-8", (readErr, content) => {
         fs.unlink(dumpPath, () => {});
-        if (err || !content) return;
+        if (readErr) {
+          console.error("auth poll: failed to read dump:", readErr.message);
+          return;
+        }
+        if (!content || !content.trim()) {
+          console.log("auth poll: screen dump empty");
+          return;
+        }
+        // Log first 200 chars of dump for debugging
+        if (authState.status !== "awaiting_auth") {
+          console.log("auth poll: screen content:", content.slice(0, 200).replace(/\n/g, "\\n"));
+        }
         const urlRegex = /https:\/\/[^\s\x00-\x1f\]\)>"']+/g;
         const matches = content.match(urlRegex);
         if (matches && matches.length > 0) {
