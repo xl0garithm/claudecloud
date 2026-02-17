@@ -539,14 +539,22 @@ function pollAuthLog() {
     }
     if (!content || !content.trim()) return;
 
+    // Strip ANSI escape codes and terminal control sequences before processing.
+    // script captures raw PTY output which is full of escape codes.
+    const clean = content
+      .replace(/\x1b\[[0-9;?]*[A-Za-z]/g, "")   // CSI sequences (colors, cursor, etc.)
+      .replace(/\x1b\][^\x07]*\x07/g, "")         // OSC sequences (title, etc.)
+      .replace(/\x1b[()][A-Z0-9]/g, "")           // Character set sequences
+      .replace(/[\x00-\x08\x0e-\x1f]/g, "");      // Other control chars (keep \t \n \r)
+
     // Log what we see (once, for debugging)
-    if (authState.status === "checking") {
-      console.log("auth poll: output so far:", content.slice(0, 300).replace(/\n/g, "\\n"));
+    if (authState.status === "checking" && clean.trim()) {
+      console.log("auth poll: output so far:", clean.slice(0, 300).replace(/\n/g, "\\n"));
     }
 
-    // Match any https URL
-    const urlRegex = /https:\/\/[^\s\x00-\x1f\]\)>"']+/g;
-    const matches = content.match(urlRegex);
+    // Match any https URL in the cleaned content
+    const urlRegex = /https:\/\/[^\s\]\)>"']+/g;
+    const matches = clean.match(urlRegex);
     if (matches && matches.length > 0) {
       // Pick the longest URL (most likely the auth URL)
       const authUrl = matches.reduce((a, b) => a.length >= b.length ? a : b);
