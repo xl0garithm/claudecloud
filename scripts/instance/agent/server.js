@@ -18,7 +18,7 @@ const http = require("http");
 const { WebSocketServer } = require("ws");
 const fs = require("fs");
 const path = require("path");
-const { execFile } = require("child_process");
+const { execFile, spawn } = require("child_process");
 const { createSession } = require("./chat");
 
 const PORT = process.env.AGENT_PORT || 3001;
@@ -483,91 +483,78 @@ function checkCredentials() {
 }
 
 let authPollTimer = null;
+let authProcess = null;
+const AUTH_LOG = "/tmp/claude-auth-output.log";
 
 function startAuthFlow() {
   authState = { status: "checking", url: null };
 
-  function tryCreateAuthTab() {
-    zellijAction(["query-tab-names"], (err) => {
-      if (err) {
-        setTimeout(tryCreateAuthTab, 2000);
-        return;
-      }
-      zellijAction(
-        ["new-tab", "--name", AUTH_TAB, "--cwd", DATA_ROOT],
-        (err) => {
-          if (err) {
-            console.error("auth: failed to create auth tab:", err.message);
-            setTimeout(tryCreateAuthTab, 3000);
-            return;
-          }
-          setTimeout(() => {
-            zellijAction(["write-chars", "claude\n"], () => {});
-          }, 500);
-          console.log("auth: created _auth tab, starting URL poll");
-          authPollTimer = setInterval(pollAuthUrl, 2000);
-        }
-      );
-    });
-  }
+  // Clean up any previous log
+  try { fs.unlinkSync(AUTH_LOG); } catch {}
 
-  tryCreateAuthTab();
+  // Run claude via 'script' to get a PTY and capture output to a log file.
+  // -q = quiet, -f = flush after each write, -c = run command
+  authProcess = spawn("script", ["-qfc", "claude", AUTH_LOG], {
+    cwd: DATA_ROOT,
+    env: { ...process.env, TERM: "xterm-256color" },
+    stdio: "ignore",
+    detached: true,
+  });
+  authProcess.unref();
+
+  authProcess.on("error", (err) => {
+    console.error("auth: failed to spawn script:", err.message);
+  });
+
+  console.log("auth: started claude via script (pid=" + authProcess.pid + "), polling " + AUTH_LOG);
+
+  // Poll the log file for auth URLs
+  authPollTimer = setInterval(pollAuthLog, 2000);
 }
 
-function pollAuthUrl() {
+function pollAuthLog() {
+  // Check if credentials appeared (auth completed)
   if (checkCredentials()) {
     console.log("auth: credentials detected, authentication complete");
     authState = { status: "authenticated", url: null };
     clearInterval(authPollTimer);
     authPollTimer = null;
-    zellijAction(["go-to-tab-name", AUTH_TAB], () => {
-      zellijAction(["close-tab"], () => {
-        zellijAction(["go-to-tab-name", "shell"], () => {});
-      });
-    });
+    // Kill the auth process group
+    if (authProcess && authProcess.pid) {
+      try { process.kill(-authProcess.pid, "SIGTERM"); } catch {}
+    }
+    authProcess = null;
+    try { fs.unlinkSync(AUTH_LOG); } catch {}
     return;
   }
 
-  // Switch to _auth tab, dump screen, look for URLs
-  zellijAction(["go-to-tab-name", AUTH_TAB], (err) => {
+  // Read the log file for URLs
+  fs.readFile(AUTH_LOG, "utf-8", (err, content) => {
     if (err) {
-      console.error("auth poll: failed to switch to _auth tab:", err.message);
+      // File might not exist yet
+      if (err.code !== "ENOENT") {
+        console.error("auth poll: read error:", err.message);
+      }
       return;
     }
-    const dumpPath = "/tmp/auth-dump-" + process.pid + ".txt";
-    zellijAction(["dump-screen", dumpPath], (err) => {
-      // Switch back to shell so user sees shell if they connect
-      zellijAction(["go-to-tab-name", "shell"], () => {});
+    if (!content || !content.trim()) return;
 
-      if (err) {
-        console.error("auth poll: dump-screen failed:", err.message);
-        return;
+    // Log what we see (once, for debugging)
+    if (authState.status === "checking") {
+      console.log("auth poll: output so far:", content.slice(0, 300).replace(/\n/g, "\\n"));
+    }
+
+    // Match any https URL
+    const urlRegex = /https:\/\/[^\s\x00-\x1f\]\)>"']+/g;
+    const matches = content.match(urlRegex);
+    if (matches && matches.length > 0) {
+      // Pick the longest URL (most likely the auth URL)
+      const authUrl = matches.reduce((a, b) => a.length >= b.length ? a : b);
+      if (authState.url !== authUrl) {
+        console.log("auth: found URL:", authUrl);
       }
-      fs.readFile(dumpPath, "utf-8", (readErr, content) => {
-        fs.unlink(dumpPath, () => {});
-        if (readErr) {
-          console.error("auth poll: failed to read dump:", readErr.message);
-          return;
-        }
-        if (!content || !content.trim()) {
-          console.log("auth poll: screen dump empty");
-          return;
-        }
-        // Log first 200 chars of dump for debugging
-        if (authState.status !== "awaiting_auth") {
-          console.log("auth poll: screen content:", content.slice(0, 200).replace(/\n/g, "\\n"));
-        }
-        const urlRegex = /https:\/\/[^\s\x00-\x1f\]\)>"']+/g;
-        const matches = content.match(urlRegex);
-        if (matches && matches.length > 0) {
-          const authUrl = matches.reduce((a, b) => a.length >= b.length ? a : b);
-          if (authState.url !== authUrl) {
-            console.log("auth: found URL:", authUrl);
-          }
-          authState = { status: "awaiting_auth", url: authUrl };
-        }
-      });
-    });
+      authState = { status: "awaiting_auth", url: authUrl };
+    }
   });
 }
 
