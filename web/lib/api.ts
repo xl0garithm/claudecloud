@@ -67,6 +67,11 @@ export interface SessionInfo {
   cwd: string;
 }
 
+
+export interface AuthStatus {
+  status: "authenticated" | "awaiting_auth" | "checking";
+  url: string | null;
+}
 export interface ConversationInfo {
   id: string;
   title: string;
@@ -225,6 +230,10 @@ export const api = {
     return apiFetch<ConversationInfo[]>(
       `/instances/${instanceId}/sessions/${encodeURIComponent(project)}/conversations`
     );
+  },
+
+  getAuthStatus(instanceId: number) {
+    return apiFetch<AuthStatus>(`/instances/${instanceId}/auth/status`);
   },
 
   // Conversations
