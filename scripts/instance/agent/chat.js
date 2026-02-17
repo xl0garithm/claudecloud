@@ -1,9 +1,19 @@
 /**
  * Claude Code SDK wrapper for instance agent.
  * Provides a streaming chat session backed by @anthropic-ai/claude-code.
+ *
+ * The SDK is ESM-only, so we use dynamic import() to load it from CommonJS.
  */
 
-const { query } = require("@anthropic-ai/claude-code");
+let queryFn = null;
+
+async function getQuery() {
+  if (!queryFn) {
+    const sdk = await import("@anthropic-ai/claude-code");
+    queryFn = sdk.query;
+  }
+  return queryFn;
+}
 
 /**
  * Extracts plain text from a Claude SDK message or result value.
@@ -41,6 +51,8 @@ function extractText(value) {
  * @returns {AsyncIterable} Stream of response events
  */
 async function* createSession(userMessage, cwd, signal) {
+  const query = await getQuery();
+
   try {
     const response = await query({
       prompt: userMessage,
