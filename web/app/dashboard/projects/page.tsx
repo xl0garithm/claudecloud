@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback, useRef } from "react";
-import { api, Instance, Project, SessionInfo } from "@/lib/api";
+import { api, Instance, Project, SessionInfo, AuthStatus } from "@/lib/api";
 import ProjectCard from "@/components/ProjectCard";
 import CloneRepoForm from "@/components/CloneRepoForm";
 
@@ -12,6 +12,8 @@ export default function ProjectsPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const pollRef = useRef<ReturnType<typeof setInterval>>();
+  const [authStatus, setAuthStatus] = useState<AuthStatus>({ status: "checking", url: null });
+  const authPollRef = useRef<ReturnType<typeof setInterval>>();
 
   const loadProjects = useCallback(async (inst: Instance) => {
     try {
@@ -41,6 +43,10 @@ export default function ProjectsPage() {
           loadSessions(inst);
           // Poll sessions every 5 seconds
           pollRef.current = setInterval(() => loadSessions(inst), 5000);
+          // Poll auth status
+          const pollAuth = () => api.getAuthStatus(inst.id).then(setAuthStatus).catch(() => {});
+          pollAuth();
+          authPollRef.current = setInterval(pollAuth, 3000);
         }
       })
       .catch((err) => {
@@ -50,6 +56,7 @@ export default function ProjectsPage() {
 
     return () => {
       if (pollRef.current) clearInterval(pollRef.current);
+      if (authPollRef.current) clearInterval(authPollRef.current);
     };
   }, [loadProjects, loadSessions]);
 
@@ -101,6 +108,33 @@ export default function ProjectsPage() {
     <div className="space-y-6">
       <CloneRepoForm onClone={handleClone} />
 
+      {authStatus.status !== "authenticated" && (
+        <div className="rounded-lg bg-amber-50 p-4 ring-1 ring-amber-200">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-amber-800">
+                Claude Code needs authentication
+              </p>
+              <p className="mt-1 text-xs text-amber-600">
+                Sign in to start using your projects.
+              </p>
+            </div>
+            {authStatus.url ? (
+              <a
+                href={authStatus.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="rounded bg-amber-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-amber-700"
+              >
+                Sign into Claude
+              </a>
+            ) : (
+              <span className="text-xs text-amber-500">Preparing...</span>
+            )}
+          </div>
+        </div>
+      )}
+
       <div>
         <h2 className="mb-4 text-lg font-semibold">Projects</h2>
         {projects.length === 0 ? (
@@ -118,6 +152,7 @@ export default function ProjectsPage() {
                 project={project}
                 instance={instance}
                 session={getSessionForProject(project)}
+                authenticated={authStatus.status === "authenticated"}
               />
             ))}
           </div>

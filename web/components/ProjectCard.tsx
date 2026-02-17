@@ -8,9 +8,10 @@ interface ProjectCardProps {
   project: Project;
   instance: Instance;
   session?: SessionInfo;
+  authenticated?: boolean;
 }
 
-export default function ProjectCard({ project, instance, session }: ProjectCardProps) {
+export default function ProjectCard({ project, instance, session, authenticated = true }: ProjectCardProps) {
   const router = useRouter();
   const [acting, setActing] = useState(false);
   const [showConversations, setShowConversations] = useState(false);
@@ -127,7 +128,7 @@ export default function ProjectCard({ project, instance, session }: ProjectCardP
           {status === "none" && (
             <button
               onClick={handleNewChat}
-              disabled={acting}
+              disabled={acting || !authenticated}
               className="rounded bg-gray-900 px-3 py-1.5 text-xs font-medium text-white hover:bg-gray-800 disabled:opacity-50"
             >
               {acting ? "Starting..." : "New Chat"}
@@ -138,14 +139,14 @@ export default function ProjectCard({ project, instance, session }: ProjectCardP
             <>
               <button
                 onClick={handleOpenTerminal}
-                disabled={acting}
+                disabled={acting || !authenticated}
                 className="rounded bg-gray-900 px-3 py-1.5 text-xs font-medium text-white hover:bg-gray-800 disabled:opacity-50"
               >
                 Open Terminal
               </button>
               <button
                 onClick={handleStop}
-                disabled={acting}
+                disabled={acting || !authenticated}
                 className="rounded bg-red-50 px-3 py-1.5 text-xs font-medium text-red-700 hover:bg-red-100 disabled:opacity-50"
               >
                 Stop
@@ -157,14 +158,14 @@ export default function ProjectCard({ project, instance, session }: ProjectCardP
             <>
               <button
                 onClick={handleContinue}
-                disabled={acting}
+                disabled={acting || !authenticated}
                 className="rounded bg-gray-900 px-3 py-1.5 text-xs font-medium text-white hover:bg-gray-800 disabled:opacity-50"
               >
                 {acting ? "Loading..." : "Continue"}
               </button>
               <button
                 onClick={handleNewChat}
-                disabled={acting}
+                disabled={acting || !authenticated}
                 className="rounded bg-gray-200 px-3 py-1.5 text-xs font-medium text-gray-700 hover:bg-gray-300 disabled:opacity-50"
               >
                 New Chat
