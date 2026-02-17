@@ -6,7 +6,7 @@ services:
       POSTGRES_PASSWORD: cloudcode
       POSTGRES_DB: cloudcode
     ports:
-      - "5432:5432"
+      - "${DB_PORT:-5432}:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
     healthcheck:
@@ -20,7 +20,7 @@ services:
       context: .
       dockerfile: Dockerfile
     ports:
-      - "8080:8080"
+      - "${API_PORT:-8080}:8080"
     environment:
       PROVIDER: docker
       ENVIRONMENT: development
@@ -28,8 +28,8 @@ services:
       API_KEY: dev-api-key
       LISTEN_ADDR: ":8080"
       JWT_SECRET: dev-jwt-secret-change-in-production
-      BASE_URL: http://localhost:8080
-      FRONTEND_URL: http://localhost:3000
+      BASE_URL: http://localhost:${API_PORT:-8080}
+      FRONTEND_URL: http://localhost:${WEB_PORT:-3000}
       ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
       OTEL_EXPORTER_OTLP_ENDPOINT: ${OTEL_EXPORTER_OTLP_ENDPOINT:-}
     volumes:
@@ -46,9 +46,9 @@ services:
       context: ./web
       dockerfile: Dockerfile
     ports:
-      - "3000:3000"
+      - "${WEB_PORT:-3000}:3000"
     environment:
-      NEXT_PUBLIC_API_URL: http://localhost:8080
+      NEXT_PUBLIC_API_URL: http://localhost:${API_PORT:-8080}
     depends_on:
       - api
 
