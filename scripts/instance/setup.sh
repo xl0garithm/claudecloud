@@ -32,8 +32,8 @@ if ! command -v node &>/dev/null; then
         *)             NODE_ARCH="linux-x64" ;;
     esac
     NODE_VERSION="v20.18.3"
-    curl -fsSL "https://nodejs.org/dist/${NODE_VERSION}/node-${NODE_VERSION}-${NODE_ARCH}.tar.xz" \
-        | tar -xJ --strip-components=1 -C /usr/local
+    curl -fsSL "https://nodejs.org/dist/${NODE_VERSION}/node-${NODE_VERSION}-${NODE_ARCH}.tar.gz" \
+        | tar -xz --strip-components=1 -C /usr/local
 else
     echo "Node.js already installed: $(node --version)"
 fi
