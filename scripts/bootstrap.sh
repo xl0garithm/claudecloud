@@ -139,18 +139,26 @@ wait_for() {
   fail "$name did not become ready after $((max * 2))s"
 }
 
-wait_for "API (healthz)" "http://localhost:8080/healthz" 30
-wait_for "Frontend"      "http://localhost:3000"         20
+# Read port overrides from .env or use defaults
+API_PORT="${API_PORT:-8080}"
+WEB_PORT="${WEB_PORT:-3000}"
+# Source .env to pick up port overrides
+if [ -f .env ]; then
+  eval "$(grep -E '^(API_PORT|WEB_PORT)=' .env 2>/dev/null)" || true
+fi
+
+wait_for "API (healthz)" "http://localhost:${API_PORT}/healthz" 30
+wait_for "Frontend"      "http://localhost:${WEB_PORT}"         20
 
 # ── 11. Smoke tests ─────────────────────────────────────────────────
 log "Running smoke tests..."
 
 # Health check response
-HEALTH=$(curl -sf http://localhost:8080/healthz)
+HEALTH=$(curl -sf "http://localhost:${API_PORT}/healthz")
 echo "  healthz: $HEALTH"
 
 # Security headers
-HEADERS=$(curl -sI http://localhost:8080/healthz 2>&1)
+HEADERS=$(curl -sI "http://localhost:${API_PORT}/healthz" 2>&1)
 if echo "$HEADERS" | grep -qi "x-content-type-options"; then
   ok "Security headers present"
 else
@@ -158,7 +166,7 @@ else
 fi
 
 # Metrics endpoint
-if curl -sf http://localhost:8080/metrics | head -1 | grep -q "^#"; then
+if curl -sf "http://localhost:${API_PORT}/metrics" | head -1 | grep -q "^#"; then
   ok "/metrics returns Prometheus format"
 else
   warn "/metrics not responding"
@@ -168,7 +176,7 @@ fi
 echo -n "  Rate limit test: "
 CODES=""
 for i in $(seq 8); do
-  CODE=$(curl -s -o /dev/null -w "%{http_code}" -X POST http://localhost:8080/auth/login \
+  CODE=$(curl -s -o /dev/null -w "%{http_code}" -X POST "http://localhost:${API_PORT}/auth/login" \
     -H "Content-Type: application/json" -d '{"email":"test@test.com"}')
   CODES="$CODES $CODE"
 done
@@ -196,10 +204,10 @@ echo -e "${GREEN}═════════════════════
 echo -e "${GREEN}  CloudCode is running!${NC}"
 echo -e "${GREEN}══════════════════════════════════════════════════${NC}"
 echo ""
-echo -e "  Landing page:  ${CYAN}http://localhost:3000${NC}"
-echo -e "  API:           ${CYAN}http://localhost:8080${NC}"
-echo -e "  Health check:  ${CYAN}http://localhost:8080/healthz${NC}"
-echo -e "  Metrics:       ${CYAN}http://localhost:8080/metrics${NC}"
+echo -e "  Landing page:  ${CYAN}http://localhost:${WEB_PORT}${NC}"
+echo -e "  API:           ${CYAN}http://localhost:${API_PORT}${NC}"
+echo -e "  Health check:  ${CYAN}http://localhost:${API_PORT}/healthz${NC}"
+echo -e "  Metrics:       ${CYAN}http://localhost:${API_PORT}/metrics${NC}"
 echo ""
 echo -e "  Logs:          ${YELLOW}$COMPOSE logs -f${NC}"
 echo -e "  Stop:          ${YELLOW}$COMPOSE down${NC}"
