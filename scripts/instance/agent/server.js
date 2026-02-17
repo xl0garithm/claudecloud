@@ -25,6 +25,11 @@ const PORT = process.env.AGENT_PORT || 3001;
 const AGENT_SECRET = process.env.AGENT_SECRET || "";
 const DATA_ROOT = "/claude-data";
 
+// --- Auth state ---
+const CREDS_PATH = "/home/claude/.claude/.credentials.json";
+const AUTH_TAB = "_auth";
+let authState = { status: "checking", url: null };
+
 const app = express();
 app.use(express.json());
 
@@ -238,7 +243,7 @@ app.get("/sessions", (req, res) => {
     }
 
     const tabNames = stdout.trim().split("\n").filter(Boolean);
-    const projectTabs = tabNames.filter((t) => t !== "shell");
+    const projectTabs = tabNames.filter((t) => t !== "shell" && !t.startsWith("_"));
 
     if (projectTabs.length === 0) {
       return res.json([]);
@@ -288,6 +293,11 @@ app.delete("/tabs/:name", (req, res) => {
       res.json({ status: "closed", tab: name });
     });
   });
+});
+
+// --- GET /auth/status — Return current auth state ---
+app.get("/auth/status", (req, res) => {
+  res.json(authState);
 });
 
 // --- GET /sessions/:project/conversations — List recent conversations for resume ---
@@ -419,7 +429,7 @@ function cleanupIdleTabs() {
     if (err) return;
 
     const tabNames = stdout.trim().split("\n").filter(Boolean);
-    const projectTabs = tabNames.filter((t) => t !== "shell");
+    const projectTabs = tabNames.filter((t) => t !== "shell" && !t.startsWith("_"));
     const now = Date.now();
 
     projectTabs.forEach((tabName) => {
@@ -458,6 +468,96 @@ function cleanupIdleTabs() {
 
 setInterval(cleanupIdleTabs, 60 * 1000); // Check every 60 seconds
 
+// --- Auth: check credentials and start auth flow if needed ---
+function checkCredentials() {
+  try {
+    const raw = fs.readFileSync(CREDS_PATH, "utf-8");
+    const creds = JSON.parse(raw);
+    if (creds.claudeAiOauth?.accessToken || creds.oauthAccount?.accessToken) {
+      return true;
+    }
+  } catch {
+    // File missing or malformed
+  }
+  return false;
+}
+
+let authPollTimer = null;
+
+function startAuthFlow() {
+  authState = { status: "checking", url: null };
+
+  function tryCreateAuthTab() {
+    zellijAction(["query-tab-names"], (err) => {
+      if (err) {
+        setTimeout(tryCreateAuthTab, 2000);
+        return;
+      }
+      zellijAction(
+        ["new-tab", "--name", AUTH_TAB, "--cwd", DATA_ROOT],
+        (err) => {
+          if (err) {
+            console.error("auth: failed to create auth tab:", err.message);
+            setTimeout(tryCreateAuthTab, 3000);
+            return;
+          }
+          setTimeout(() => {
+            zellijAction(["write-chars", "claude\n"], () => {});
+          }, 500);
+          console.log("auth: created _auth tab, starting URL poll");
+          authPollTimer = setInterval(pollAuthUrl, 2000);
+        }
+      );
+    });
+  }
+
+  tryCreateAuthTab();
+}
+
+function pollAuthUrl() {
+  if (checkCredentials()) {
+    console.log("auth: credentials detected, authentication complete");
+    authState = { status: "authenticated", url: null };
+    clearInterval(authPollTimer);
+    authPollTimer = null;
+    zellijAction(["go-to-tab-name", AUTH_TAB], () => {
+      zellijAction(["close-tab"], () => {
+        zellijAction(["go-to-tab-name", "shell"], () => {});
+      });
+    });
+    return;
+  }
+
+  zellijAction(["go-to-tab-name", AUTH_TAB], (err) => {
+    if (err) return;
+    const dumpPath = "/tmp/auth-dump-" + process.pid + ".txt";
+    zellijAction(["dump-screen", dumpPath, "--full"], (err) => {
+      zellijAction(["go-to-tab-name", "shell"], () => {});
+      if (err) return;
+      fs.readFile(dumpPath, "utf-8", (err, content) => {
+        fs.unlink(dumpPath, () => {});
+        if (err || !content) return;
+        const urlRegex = /https:\/\/[^\s\x00-\x1f\]\)>"']+/g;
+        const matches = content.match(urlRegex);
+        if (matches && matches.length > 0) {
+          const authUrl = matches.reduce((a, b) => a.length >= b.length ? a : b);
+          if (authState.url !== authUrl) {
+            console.log("auth: found URL:", authUrl);
+          }
+          authState = { status: "awaiting_auth", url: authUrl };
+        }
+      });
+    });
+  });
+}
+
 server.listen(PORT, "0.0.0.0", () => {
   console.log(`Instance agent listening on port ${PORT}`);
+  if (checkCredentials()) {
+    console.log("auth: credentials found, skipping auth flow");
+    authState = { status: "authenticated", url: null };
+  } else {
+    console.log("auth: no credentials, starting auth flow");
+    startAuthFlow();
+  }
 });
