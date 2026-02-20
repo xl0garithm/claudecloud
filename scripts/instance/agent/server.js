@@ -18,7 +18,7 @@ const http = require("http");
 const { WebSocketServer } = require("ws");
 const fs = require("fs");
 const path = require("path");
-const { execFile, spawn } = require("child_process");
+const { execFile } = require("child_process");
 const { createSession } = require("./chat");
 
 const PORT = process.env.AGENT_PORT || 3001;
@@ -483,87 +483,54 @@ function checkCredentials() {
 }
 
 let authPollTimer = null;
-let authProcess = null;
-const AUTH_LOG = "/tmp/claude-auth-output.log";
 
 function startAuthFlow() {
-  authState = { status: "checking", url: null };
+  authState = { status: "needs_auth", url: null };
 
-  // Clean up any previous log
-  try { fs.unlinkSync(AUTH_LOG); } catch {}
-
-  // Run claude via 'script' to get a PTY and capture output to a log file.
-  // -q = quiet, -f = flush after each write, -c = run command
-  authProcess = spawn("script", ["-qfc", "claude", AUTH_LOG], {
-    cwd: DATA_ROOT,
-    env: { ...process.env, TERM: "xterm-256color" },
-    stdio: "ignore",
-    detached: true,
-  });
-  authProcess.unref();
-
-  authProcess.on("error", (err) => {
-    console.error("auth: failed to spawn script:", err.message);
-  });
-
-  console.log("auth: started claude via script (pid=" + authProcess.pid + "), polling " + AUTH_LOG);
-
-  // Poll the log file for auth URLs
-  authPollTimer = setInterval(pollAuthLog, 2000);
-}
-
-function pollAuthLog() {
-  // Check if credentials appeared (auth completed)
-  if (checkCredentials()) {
-    console.log("auth: credentials detected, authentication complete");
-    authState = { status: "authenticated", url: null };
-    clearInterval(authPollTimer);
-    authPollTimer = null;
-    // Kill the auth process group
-    if (authProcess && authProcess.pid) {
-      try { process.kill(-authProcess.pid, "SIGTERM"); } catch {}
-    }
-    authProcess = null;
-    try { fs.unlinkSync(AUTH_LOG); } catch {}
-    return;
-  }
-
-  // Read the log file for URLs
-  fs.readFile(AUTH_LOG, "utf-8", (err, content) => {
-    if (err) {
-      // File might not exist yet
-      if (err.code !== "ENOENT") {
-        console.error("auth poll: read error:", err.message);
-      }
-      return;
-    }
-    if (!content || !content.trim()) return;
-
-    // Strip ANSI escape codes and terminal control sequences before processing.
-    // script captures raw PTY output which is full of escape codes.
-    const clean = content
-      .replace(/\x1b\[[0-9;?]*[A-Za-z]/g, "")   // CSI sequences (colors, cursor, etc.)
-      .replace(/\x1b\][^\x07]*\x07/g, "")         // OSC sequences (title, etc.)
-      .replace(/\x1b[()][A-Z0-9]/g, "")           // Character set sequences
-      .replace(/[\x00-\x08\x0e-\x1f]/g, "");      // Other control chars (keep \t \n \r)
-
-    // Log what we see (once, for debugging)
-    if (authState.status === "checking" && clean.trim()) {
-      console.log("auth poll: output so far:", clean.slice(0, 300).replace(/\n/g, "\\n"));
-    }
-
-    // Match any https URL in the cleaned content
-    const urlRegex = /https:\/\/[^\s\]\)>"']+/g;
-    const matches = clean.match(urlRegex);
-    if (matches && matches.length > 0) {
-      // Pick the longest URL (most likely the auth URL)
-      const authUrl = matches.reduce((a, b) => a.length >= b.length ? a : b);
-      if (authState.url !== authUrl) {
-        console.log("auth: found URL:", authUrl);
-      }
-      authState = { status: "awaiting_auth", url: authUrl };
+  // Create a Zellij tab running `claude` so the user can interact with
+  // the auth flow directly through the web terminal. This avoids fragile
+  // output scraping — the user handles any prompts (terms, auth method)
+  // themselves.
+  zellijAction(["query-tab-names"], (err, stdout) => {
+    const tabNames = (!err && stdout) ? stdout.trim().split("\n") : [];
+    if (!tabNames.includes(AUTH_TAB)) {
+      zellijAction(
+        ["new-tab", "--name", AUTH_TAB, "--cwd", DATA_ROOT],
+        (err) => {
+          if (err) {
+            console.error("auth: failed to create auth tab:", err.message);
+            return;
+          }
+          // Type `claude --dangerously-skip-permissions` into the auth tab
+          // User will need to accept trust prompt, then run /login
+          setTimeout(() => {
+            zellijAction(["write-chars", "claude --dangerously-skip-permissions\n"], () => {});
+          }, 500);
+          console.log("auth: created _auth tab with claude running");
+        }
+      );
+    } else {
+      console.log("auth: _auth tab already exists, switching to it");
+      zellijAction(["go-to-tab-name", AUTH_TAB], () => {});
     }
   });
+
+  // Poll credentials file until auth completes
+  authPollTimer = setInterval(() => {
+    if (checkCredentials()) {
+      console.log("auth: credentials detected, authentication complete");
+      authState = { status: "authenticated", url: null };
+      clearInterval(authPollTimer);
+      authPollTimer = null;
+
+      // Clean up the auth tab
+      zellijAction(["go-to-tab-name", AUTH_TAB], () => {
+        zellijAction(["close-tab"], () => {
+          console.log("auth: closed _auth tab");
+        });
+      });
+    }
+  }, 3000);
 }
 
 server.listen(PORT, "0.0.0.0", () => {
