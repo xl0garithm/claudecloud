@@ -27,7 +27,6 @@ const DATA_ROOT = "/claude-data";
 
 // --- Auth state ---
 const CREDS_PATH = "/home/claude/.claude/.credentials.json";
-const AUTH_TAB = "_auth";
 let authState = { status: "checking", url: null };
 
 const app = express();
@@ -484,51 +483,20 @@ function checkCredentials() {
 
 let authPollTimer = null;
 
-function startAuthFlow() {
+function startAuthPolling() {
+  // Auth is handled by the Zellij startup script (startup.sh) which
+  // launches claude --dangerously-skip-permissions if no credentials exist.
+  // The user interacts with Claude Code directly in the terminal.
+  // We just poll the credentials file until it appears.
   authState = { status: "needs_auth", url: null };
+  console.log("auth: no credentials found, waiting for user to authenticate via terminal");
 
-  // Create a Zellij tab running `claude` so the user can interact with
-  // the auth flow directly through the web terminal. This avoids fragile
-  // output scraping — the user handles any prompts (terms, auth method)
-  // themselves.
-  zellijAction(["query-tab-names"], (err, stdout) => {
-    const tabNames = (!err && stdout) ? stdout.trim().split("\n") : [];
-    if (!tabNames.includes(AUTH_TAB)) {
-      zellijAction(
-        ["new-tab", "--name", AUTH_TAB, "--cwd", DATA_ROOT],
-        (err) => {
-          if (err) {
-            console.error("auth: failed to create auth tab:", err.message);
-            return;
-          }
-          // Type `claude --dangerously-skip-permissions` into the auth tab
-          // User will need to accept trust prompt, then run /login
-          setTimeout(() => {
-            zellijAction(["write-chars", "claude --dangerously-skip-permissions\n"], () => {});
-          }, 500);
-          console.log("auth: created _auth tab with claude running");
-        }
-      );
-    } else {
-      console.log("auth: _auth tab already exists, switching to it");
-      zellijAction(["go-to-tab-name", AUTH_TAB], () => {});
-    }
-  });
-
-  // Poll credentials file until auth completes
   authPollTimer = setInterval(() => {
     if (checkCredentials()) {
       console.log("auth: credentials detected, authentication complete");
       authState = { status: "authenticated", url: null };
       clearInterval(authPollTimer);
       authPollTimer = null;
-
-      // Clean up the auth tab
-      zellijAction(["go-to-tab-name", AUTH_TAB], () => {
-        zellijAction(["close-tab"], () => {
-          console.log("auth: closed _auth tab");
-        });
-      });
     }
   }, 3000);
 }
@@ -539,7 +507,7 @@ server.listen(PORT, "0.0.0.0", () => {
     console.log("auth: credentials found, skipping auth flow");
     authState = { status: "authenticated", url: null };
   } else {
-    console.log("auth: no credentials, starting auth flow");
-    startAuthFlow();
+    console.log("auth: no credentials, starting auth polling");
+    startAuthPolling();
   }
 });

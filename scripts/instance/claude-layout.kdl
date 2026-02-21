@@ -1,7 +1,8 @@
 // Zellij layout for Claude Code instances.
-// Single pane — tab switching managed by the web UI via agent IPC.
+// The startup script handles auth if credentials don't exist.
+// Tab switching managed by the web UI via agent IPC.
 layout {
     tab name="shell" focus=true {
-        pane
+        pane command="/home/claude/startup.sh"
     }
 }

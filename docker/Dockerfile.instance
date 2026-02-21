@@ -5,11 +5,12 @@ ENV DEBIAN_FRONTEND=noninteractive
 # Copy setup scripts first (they drive the install)
 COPY scripts/instance/setup.sh /opt/cloudcode/setup.sh
 COPY scripts/instance/connect.sh /opt/cloudcode/connect.sh
+COPY scripts/instance/startup.sh /opt/cloudcode/startup.sh
 COPY scripts/instance/claude-layout.kdl /opt/cloudcode/claude-layout.kdl
 COPY scripts/instance/zellij-config.kdl /opt/cloudcode/zellij-config.kdl
 COPY docker/entrypoint.sh /entrypoint.sh
 COPY docker/supervisor.sh /supervisor.sh
-RUN chmod +x /opt/cloudcode/setup.sh /opt/cloudcode/connect.sh /entrypoint.sh /supervisor.sh
+RUN chmod +x /opt/cloudcode/setup.sh /opt/cloudcode/connect.sh /opt/cloudcode/startup.sh /entrypoint.sh /supervisor.sh
 
 # Run the idempotent setup script
 RUN /opt/cloudcode/setup.sh
@@ -20,10 +21,11 @@ RUN mkdir -p /home/claude/.config/zellij/layouts && \
     cp /opt/cloudcode/claude-layout.kdl /home/claude/.config/zellij/layouts/claude.kdl && \
     chown -R claude:claude /home/claude/.config/zellij
 
-# Copy connect script to claude's home (used by ttyd to attach to Zellij)
+# Copy connect and startup scripts to claude's home
 RUN cp /opt/cloudcode/connect.sh /home/claude/connect.sh && \
-    chmod +x /home/claude/connect.sh && \
-    chown claude:claude /home/claude/connect.sh
+    cp /opt/cloudcode/startup.sh /home/claude/startup.sh && \
+    chmod +x /home/claude/connect.sh /home/claude/startup.sh && \
+    chown claude:claude /home/claude/connect.sh /home/claude/startup.sh
 
 # Instance agent (Node.js sidecar)
 COPY scripts/instance/agent /opt/cloudcode/agent
